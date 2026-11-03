@@ -41,3 +41,21 @@ The editor's Test Run uses these engine commands for a real in-browser session f
 ## Verification boundary
 
 Files were committed to `main`. A local pnpm install/build, automated unit tests, browser interaction tests, and GitHub Actions result have not been run/confirmed in this work session. Do not treat this milestone as release-tested.
+
+
+## Portable web quiz files
+
+The web editor now uses a portable, versioned `.playstate` file format:
+- File envelope identifies the Playstate format and schema version.
+- Quiz payload includes its title, questions, answer options, correct answer IDs and optional explanations.
+- Import rejects invalid JSON, unknown format versions, malformed quiz data and files above 5 MB.
+- Import assigns a new quiz ID so the imported working copy is independent of its source.
+- The editor can export a validated quiz as a downloadable `.playstate` file.
+- Browser-local recovery snapshots are written while editing and restored on reload.
+- The browser's native unsaved-changes warning is registered while the editor has changes beyond its last downloaded file snapshot.
+
+The browser cannot show a custom save dialog during tab/window closure or initiate a download from the close prompt. The explicit Save Quiz action is therefore the authoritative export path; the close warning is a last-chance reminder, not a replacement for saving.
+
+## Verification boundary
+
+The file-format and editor integration changes have been committed to `main`. They still require the GitHub Actions typecheck/build run and hands-on browser checks for file download, import validation, reload recovery, and close/reload warnings. The web app currently supports importing a file directly into the editor; a persistent multi-quiz library and full presenter/audience flow remain subsequent work.
