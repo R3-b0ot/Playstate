@@ -79,10 +79,10 @@ function createIndependentQuizId(): string {
 export function quizFileName(title: string): string {
   const safe = title
     .normalize("NFKD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9-_ ]/g, "")
     .trim()
-    .replace(/\\s+/g, "-")
+    .replace(/\s+/g, "-")
     .slice(0, 64);
   return `${safe || "playstate-quiz"}${PLAYSTATE_QUIZ_FILE_EXTENSION}`;
 }
