@@ -6,6 +6,7 @@ import { Activity, Archive, ArrowDownRight, ArrowRight, Bell, BookOpen, ChevronD
 import { Button, Card, Status, Toast } from "@playstate/ui";
 import QuizEditor from "./QuizEditor";
 import Presenter from "./Presenter";
+import { DEMO_QUIZ } from "./demoQuiz";
 import { parseQuizFile, validateQuiz, type QuizDefinition } from "@playstate/game-core";
 
 type Page = "Overview" | "Quiz library" | "Results & history" | "Settings" | "Quiz editor";
@@ -23,7 +24,7 @@ const nav: { label: Page; icon: typeof LayoutDashboard }[] = [
 
 export default function App() {
   const [page, setPage] = useState<Page>("Overview");
-  const [quizFiles, setQuizFiles] = useState<QuizDefinition[]>(readLibrary);
+  const [quizFiles, setQuizFiles] = useState<QuizDefinition[]>(() => { const saved = readLibrary(); return saved.length ? saved : [DEMO_QUIZ]; });
   const quizzes: Quiz[] = useMemo(() => quizFiles.map(q => ({ id:q.id, title:q.title, category:"Uncategorised", questions:q.questions.length, updated:"Stored locally", status:q.questions.length && q.questions.every(item => item.prompt.trim() && item.options.every(option => option.text.trim())) ? "Ready" : "Draft" })), [quizFiles]);
   useEffect(() => { try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(quizFiles)); } catch { setNotice("Local library storage is full or unavailable. Export your quiz files to keep a separate copy."); } }, [quizFiles]);
   const [query, setQuery] = useState("");
