@@ -14,7 +14,7 @@ function readRecoveredQuestions(key: string, fallback: QuizQuestion[]): QuizQues
   } catch { return fallback; }
 }
 
-export default function QuizEditor({ title, onBack, onNotice, initialQuiz }: { title: string; onBack: () => void; onNotice: (message: string) => void; initialQuiz?: QuizDefinition | null }) {
+export default function QuizEditor({ title, onBack, onNotice, initialQuiz, onQuizChange }: { title: string; onBack: () => void; onNotice: (message: string) => void; initialQuiz?: QuizDefinition | null; onQuizChange: (quiz: QuizDefinition) => void }) {
   const recoveryKey = `playstate:recovery:${initialQuiz?.id ?? title}`;
   const [questions,setQuestions] = useState<QuizQuestion[]>(() => readRecoveredQuestions(recoveryKey, initialQuiz?.questions ?? []));
   const [selected,setSelected] = useState(0);
@@ -23,7 +23,7 @@ export default function QuizEditor({ title, onBack, onNotice, initialQuiz }: { t
   const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialQuiz?.questions ?? []));
   const isDirty = JSON.stringify(questions) !== savedSnapshot;
   const question = questions[selected];
-  const quiz: QuizDefinition = useMemo(() => ({ id:"local-preview", title, questions }), [title,questions]);
+  const quiz: QuizDefinition = useMemo(() => ({ id:initialQuiz?.id ?? "local-preview", title, questions }), [initialQuiz?.id,title,questions]);
   const errors = validateQuiz(quiz);
   useEffect(() => {
     try { localStorage.setItem(recoveryKey, JSON.stringify({ title, questions, recoveredAt: new Date().toISOString() })); } catch { onNotice("Browser recovery storage is unavailable. Download your quiz file to keep a copy."); }
