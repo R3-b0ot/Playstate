@@ -116,11 +116,29 @@ export default function App() {
 
 function ContestantWindow({token}:{token:string}) {
  const [payload,setPayload] = useState<any>(()=>{try{return JSON.parse(localStorage.getItem(`playstate:live:${token}`)??"null")}catch{return null}});
- useEffect(()=>{const update=(event:StorageEvent)=>{if(event.key===`playstate:live:${token}`&&event.newValue){try{setPayload(JSON.parse(event.newValue))}catch{}}};window.addEventListener("storage",update);return()=>window.removeEventListener("storage",update)},[token]);
- function choose(optionId:string){localStorage.setItem(`playstate:answer:${token}`,JSON.stringify({optionId,at:Date.now()}));}
- if(!payload?.session) return <div className="contestant-window"><h1>Waiting for Computerji…</h1><p>Keep this window open. The quiz will appear when the host starts the show.</p></div>;
+ useEffect(()=>{
+   const key=`playstate:live:${token}`;
+   const apply=(value:string|null)=>{if(!value)return;try{setPayload(JSON.parse(value))}catch{/* ignore malformed host state */}};
+   apply(localStorage.getItem(key));
+   const channel=new BroadcastChannel(`playstate:${token}`);
+   const receive=(event:MessageEvent)=>{if(event.data?.type==="session")setPayload(event.data.payload)};
+   channel.addEventListener("message",receive);
+   const update=(event:StorageEvent)=>{if(event.key===key)apply(event.newValue)};
+   window.addEventListener("storage",update);
+   const poll=window.setInterval(()=>apply(localStorage.getItem(key)),500);
+   return()=>{channel.close();window.removeEventListener("storage",update);window.clearInterval(poll)};
+ },[token]);
+ function choose(optionId:string){
+   const message={optionId,at:Date.now()};
+   try{localStorage.setItem(`playstate:answer:${token}`,JSON.stringify(message))}catch{/* channel remains available */}
+   const channel=new BroadcastChannel(`playstate:${token}`);
+   channel.postMessage({type:"answer",...message});
+   channel.close();
+ }
+ if(!payload?.session) return <div className="contestant-window"><header><img src={playstateMark} alt=""/><span>PLAYSTATE · CONTESTANT</span></header><div className="contestant-body"><h1>Waiting for Computerji…</h1><p>Keep this window open. The quiz will appear when the host starts the show.</p></div></div>;
  const s=payload.session; const q=s.quiz.questions[s.questionIndex];
- return <div className="contestant-window"><header><img src={playstateMark} alt=""/> <span>PLAYSTATE · CONTESTANT</span></header><div className="contestant-body"><div className="eyebrow">QUESTION {s.questionIndex+1} / {s.quiz.questions.length}</div><h1>{s.phase==="hidden"?"Get ready…":q.prompt}</h1>{s.phase!=="hidden"&&<div className="contestant-options">{q.options.map((o:any)=><button key={o.id} disabled={s.phase!=="options-visible"} className={s.selectedOptionId===o.id?"chosen":""} onClick={()=>choose(o.id)}><b>{o.label}</b>{o.text}</button>)}</div>}{s.phase==="answer-revealed"&&<h2 className="contestant-reveal">Correct answer: {q.options.find((o:any)=>o.id===q.correctOptionId)?.text}</h2>}</div><footer>YOUR ANSWER IS SENT TO COMPUTERJI</footer></div>;
+ if(!q)return <div className="contestant-window"><h1>Waiting for the next question…</h1></div>;
+ return <div className="contestant-window"><header><img src={playstateMark} alt=""/> <span>PLAYSTATE · CONTESTANT</span></header><div className="contestant-body"><div className="eyebrow">QUESTION {s.questionIndex+1} / {s.quiz.questions.length}</div><h1>{s.phase==="hidden"?"Get ready…":q.prompt}</h1>{s.phase!=="hidden"&&<div className="contestant-options">{q.options.map((o:any)=><button key={o.id} disabled={s.phase!=="options-visible"} className={s.selectedOptionId===o.id?"chosen":""} onClick={()=>choose(o.id)}><b>{o.label}</b>{o.text}</button>)}</div>}{s.phase==="answer-revealed"&&<h2 className="contestant-reveal">Correct answer: {q.options.find((o:any)=>o.id===q.correctOptionId)?.text}</h2>}{s.phase==="answer-locked"&&<h2>Answer locked. Waiting for Computerji…</h2>}</div><footer>YOUR ANSWER IS SENT TO COMPUTERJI</footer></div>;
 }
 
 function PageHeading({eyebrow,title,subtitle,action}:{eyebrow:string;title:string;subtitle:string;action?:ReactNode}) { return <div className="page-heading"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{subtitle}</p></div>{action}</div>; }
