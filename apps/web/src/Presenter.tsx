@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnswerOption, Button, Card, Status } from "@playstate/ui";
 import { ArrowLeft, Clock3, Eye, EyeOff, Maximize2, Pause, Play, RotateCcw } from "lucide-react";
-import { createSession, endSession, expireTimer, lockAnswer, nextQuestion, pauseTimer, revealAnswer, revealOptions, selectAnswer, startSession, startTimer, timerDurationForQuestion, type QuizDefinition, type SessionState } from "@playstate/game-core";
+import { createSession, endSession, expireTimer, lockAnswer, nextQuestion, pauseTimer, resumeTimer, revealAnswer, revealOptions, selectAnswer, startSession, startTimer, type QuizDefinition, type SessionState } from "@playstate/game-core";
 
 export default function Presenter({ quiz, onExit }: { quiz: QuizDefinition; onExit: () => void }) {
   const [session, setSession] = useState<SessionState>(() => startSession(createSession(quiz).state).state);
@@ -52,9 +52,9 @@ export default function Presenter({ quiz, onExit }: { quiz: QuizDefinition; onEx
       {session.phase === "answer-revealed" && <Card className="presenter-feedback"><Status tone={correct ? "good" : "danger"}>{correct ? "CORRECT ANSWER" : session.outcome === "timed-out" ? "TIME IS UP" : "INCORRECT ANSWER"}</Status><h2>{question.options.find(option=>option.id===question.correctOptionId)?.text}</h2>{question.explanation && <p>{question.explanation}</p>}</Card>}
       {!audience && <Card className="presenter-controls"><div className="presenter-control-label"><span className="eyebrow">HOST CONTROLS</span><strong>{finished ? "Session complete" : "Manage the show"}</strong></div><div className="presenter-control-actions">
         {session.phase==="hidden" && <Button variant="primary" onClick={()=>run((state,at)=>revealOptions(state,at))}>Reveal question & options</Button>}
-        {session.phase==="options-visible" && session.timer.status==="idle" && session.timer.durationMs !== null && <Button variant="primary" onClick={()=>run((state,at)=>startTimer(state,at))}><Play size={15}/> Start countdown</Button>}
+        {session.phase==="options-visible" && ["idle","paused"].includes(session.timer.status) && session.timer.durationMs !== null && <Button variant="primary" onClick={()=>run((state,at)=>session.timer.status==="paused" ? resumeTimer(state,at) : startTimer(state,at))}><Play size={15}/> {session.timer.status==="paused" ? "Resume countdown" : "Start countdown"}</Button>}
         {session.phase==="options-visible" && timerRunning && <Button variant="secondary" onClick={()=>run((state,at)=>pauseTimer(state,at))}><Pause size={15}/> Pause timer</Button>}
-        {session.phase==="options-visible" && <Button variant="secondary" onClick={()=>run((state,at)=>lockAnswer(state,at))}>Lock answer</Button>}
+        {session.phase==="options-visible" && <Button variant="secondary" onClick={()=>run((state,at)=>{const paused=state.timer.status==="running" ? pauseTimer(state,at).state : state;return lockAnswer(paused,at);})}>Lock answer</Button>}
         {session.phase==="answer-locked" && <Button variant="primary" onClick={()=>run((state,at)=>revealAnswer(state,at))}>Reveal correct answer</Button>}
         {correct && <Button variant="primary" onClick={()=>run((state,at)=>nextQuestion(state,at))}>Next question <Play size={15}/></Button>}
         {finished && <Button variant="secondary" onClick={onExit}><ArrowLeft size={15}/> Back to library</Button>}
