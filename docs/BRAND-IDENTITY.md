@@ -1,6 +1,6 @@
 # Playstate — brand identity direction
 
-**Status:** Creative direction proposal 0.1  
+**Status:** Approved  
 **Product:** Offline-first live quiz platform  
 **Brand direction:** Dark cinematic × neon futuristic  
 **Logo system:** Symbol + wordmark
@@ -45,7 +45,19 @@ Use cyan as the default interaction colour. Lime should communicate success/corr
 - **Numeric emphasis:** Use tabular numerals for timers, question numbers and scores.
 - Avoid using a futuristic display face for paragraphs or small controls. Keep typography functional first.
 
-### Logo concept
+### Approved logo assets
+
+The logo artwork in the repository is approved for use. These files are canonical; use them directly rather than redrawing or inventing alternatives:
+
+- `assets/brand/playstate-mark.svg` — monochrome symbol.
+- `assets/brand/playstate-mark-neon.svg` — neon symbol.
+- `assets/brand/playstate-wordmark.svg` — monochrome wordmark lockup.
+- `assets/brand/playstate-wordmark-neon.svg` — primary neon wordmark lockup.
+- `apps/web/public/favicon.svg` — browser favicon.
+
+Use the symbol alone where space is constrained. Use the wordmark lockup for primary product branding. Do not distort, crop or create competing marks.
+
+## Logo system
 
 Create a custom geometric symbol that fuses a forward/play direction with a subtle P construction. It should remain recognisable in a 24 px navigation slot and as a monochrome app icon.
 
@@ -80,5 +92,5 @@ The primary lockup is symbol + uppercase PLAYSTATE wordmark. Keep the wordmark c
 - No fake online multiplayer, cloud sync or account features in product messaging.
 - The browser showcase and native desktop application share the same visual system.
 - Neon is an accent system, not a substitute for hierarchy or contrast.
-- The current generated styleboard is exploratory art direction, not final production artwork. Logo geometry, typography, contrast and all UI copy must be redrawn and verified in the implementation.
+- Use the approved SVG files and shared CSS tokens as the single source of truth for all new product UI and documentation.
 - Check font licences and trademark/domain availability before public launch.
