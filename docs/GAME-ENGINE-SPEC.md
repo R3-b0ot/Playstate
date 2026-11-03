@@ -1,4 +1,4 @@
-# Game engine specification — draft 0.2
+# Game engine specification — draft 0.3
 
 **Status:** Gameplay rules confirmed by product owner. Architecture and transition contract are specified; implementation and runtime tests are still pending.
 
@@ -7,11 +7,11 @@
 1. Timer durations are based on the question's position in the active session:
    - Questions 1–4: 60 seconds each.
    - Questions 5–9: 120 seconds each.
-   - Question 10 onwards: 60 seconds each.
-2. When the timer expires, the engine automatically locks the current answer state. If no answer was selected, it records the question as unanswered. The host must explicitly reveal the result.
+   - Question 10 onwards: untimed. No countdown is displayed or enforced.
+2. For timed questions, when the timer expires, the engine automatically locks the current answer state. If no answer was selected, it records the question as unanswered. The host must explicitly reveal the result.
 3. An incorrect answer ends the participant's run. No subsequent question may be played in that session.
 
-These are deliberate Playstate rules. The 60-second duration from question 10 onwards is the confirmed product choice, even though the legacy source appears to have intended 150 seconds for questions after question 10.
+Question 10 onwards being untimed is the confirmed product rule. The legacy source contains an apparent timer boundary defect, but its inferred intended behaviour does not override this decision.
 
 ## Domain model
 
@@ -21,7 +21,7 @@ A Question has a stable ID, prompt, two or more answer options (legacy migration
 
 A Quiz Session is a runtime instance created from a quiz snapshot. It stores session ID and lifecycle status, quiz snapshot/version, ordered question IDs, current index, current question state, timer configuration and remaining time, progression configuration/current milestone, participant outcome, and timestamps.
 
-A question-level timer override may be supported for custom quiz formats. Unless a quiz explicitly enables overrides, the confirmed session-position defaults above apply.
+The default timer policy is based on question position: 60 seconds for positions 1–4, 120 seconds for positions 5–9, and no timer from position 10 onwards. A future quiz-level configuration may allow timed/untimed overrides, but it must not silently change these defaults.
 
 ## Question states
 
@@ -46,39 +46,44 @@ Participant outcome is tracked separately from session lifecycle:
 - `ended-by-host`
 - `timed-out` (optional display classification for an unanswered expiry; the session is treated as unsuccessful)
 
-A wrong answer sets the participant outcome to `lost` and ends the run immediately after the host reveals the answer. The engine must not permit Next Question after a loss. Timer expiry with no selection locks the question as unanswered; after the host reveals the result, it is treated as an unsuccessful answer and the run ends. If a selected answer is locked by expiry, the host reveals whether it was correct; an incorrect selection ends the run, while a correct selection may continue.
+A wrong answer sets the participant outcome to `lost` and ends the run immediately after the host reveals the answer. The engine must not permit Next Question after a loss. On a timed question, expiry with no selection locks the question as unanswered; after the host reveals the result, it is treated as unsuccessful and the run ends. If a selected answer is locked by expiry, the host reveals whether it was correct; an incorrect selection ends the run, while a correct selection may continue. Untimed questions never expire automatically.
 
 ## Commands and transitions
 
 | Command | Preconditions | Result |
 |---|---|---|
-| Start session | Session is ready | First question becomes current; timer is prepared |
+| Start session | Session is ready | First question becomes current; timer is prepared only if this question is timed |
 | Reveal options | Current question is hidden | Options become visible |
-| Start timer | Timer is idle or paused; question accepts answers | Countdown runs |
+| Start timer | Current question is timed; timer is idle or paused; question accepts answers | Countdown runs |
 | Pause timer | Timer is running | Countdown pauses with remaining time preserved |
 | Resume timer | Timer is paused | Countdown resumes |
 | Select answer | Options visible; answer not locked | Selected option changes |
-| Lock answer | Options visible; answer not locked | Selection freezes; timer stops |
-| Timer expires | Timer is running and reaches zero | Engine locks selection or records unanswered; emits expiry and lock events |
+| Lock answer | Options visible; answer not locked | Selection freezes; timer stops if running |
+| Timer expires | Current question is timed; timer is running and reaches zero | Engine locks selection or records unanswered; emits expiry and lock events |
 | Reveal answer | Answer is locked | Correct option and outcome are revealed; incorrect/unanswered outcome ends the run |
-| Next question | Current answer is revealed and participant remains in progress | Move forward and initialise next question |
+| Next question | Current answer is revealed and participant remains in progress | Move forward and initialise next question; timer is prepared only for timed questions |
 | End session | Session is running or paused | Session is ended by host |
 | Reset session | Host confirms | New clean session; selection and timer state cleared |
 
-Invalid transitions return typed errors. The UI must reflect the commands currently available. Locking is irreversible for that question; there is no post-lock answer change. A host reset starts a clean session rather than silently unlocking an answer in the same run.
+Invalid transitions return typed errors. The UI must reflect the commands currently available. Locking is irreversible for that question; there is no post-lock answer change. A host reset starts a clean session rather than silently unlocking an answer in the same run. Timer commands and expiry events are invalid for untimed questions.
 
 ## Timer policy and expiry
 
-The confirmed default schedule is 60 seconds for questions 1–4, 120 seconds for questions 5–9, and 60 seconds for question 10 onwards.
+The confirmed default schedule is:
+- Questions 1–4: 60 seconds.
+- Questions 5–9: 120 seconds.
+- Question 10 onwards: no timer.
 
-Timer expiry is an engine transition, not merely a visual countdown reaching zero:
+Timer expiry is an engine transition only for timed questions:
 - Freeze the timer at zero.
 - Lock the current selection.
 - If no selection exists, store an explicit unanswered state.
 - Emit `TimerExpired` and `AnswerLocked` domain events.
 - Do not reveal the correct answer automatically.
 - Wait for the host to reveal the answer.
-- After reveal, an incorrect or unanswered result ends the participant's run; a correct selected answer can proceed.
+- After reveal, an incorrect or unanswered result ends the participant's run; a correct selected answer can continue.
+
+Untimed questions have no countdown, no expiry event, and no automatic timer-based locking. The host can still manually lock the answer.
 
 Timer ticking uses an injectable clock/time source so tests are deterministic. UI intervals are not the source of truth. Pausing and resuming preserve remaining time.
 
@@ -107,10 +112,11 @@ Persist enough state to recover an interrupted desktop session safely. Event his
 - Locked answers cannot change.
 - Revealed answers must already be locked.
 - Remaining timer duration cannot be negative.
+- Untimed questions cannot start, pause, resume, or expire a timer.
 - A lost, won, or host-ended participant run cannot accept another question.
 - An unanswered timer expiry is distinct from a selected answer.
 - Progression values are ordered and explicitly configured.
 
 ## Testing
 
-Use table-driven tests for every command, valid/invalid transition, timer boundaries (questions 4/5, 9/10, and 10/11), expiry with and without a selected answer, correct/incorrect/unanswered reveal outcomes, loss preventing further progression, missing answer, and end-of-quiz. Use a fake clock for timer tests. Test presenter/display projection separately from the engine.
+Use table-driven tests for every command, valid/invalid transition, timer boundaries (questions 4/5, 9/10, and 10/11), expiry with and without a selected answer, untimed question behaviour (no countdown or expiry), correct/incorrect/unanswered reveal outcomes, loss preventing further progression, missing answer, and end-of-quiz. Use a fake clock for timer tests. Test presenter/display projection separately from the engine.
