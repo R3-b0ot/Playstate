@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" role="img" aria-labelledby="title desc">
+  <title id="title">Playstate symbol</title>
+  <desc id="desc">Geometric P-shaped play symbol.</desc>
+  <path fill="#F4F7FB" fill-rule="evenodd" d="M18 8h39c27 0 43 15 43 38S84 84 57 84H43v20L18 89V8Zm27 22v32h12c12 0 18-6 18-16s-6-16-18-16H45Z"/>
+  <path fill="#080B16" d="m49 35 24 13-24 13V35Z"/>
+</svg>
