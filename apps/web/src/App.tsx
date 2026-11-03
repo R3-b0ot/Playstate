@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import playstateWordmark from "../../../assets/brand/playstate-wordmark-neon.svg";
 import playstateMark from "../../../assets/brand/playstate-mark-neon.svg";
@@ -8,9 +8,10 @@ import QuizEditor from "./QuizEditor";
 import { parseQuizFile, type QuizDefinition } from "@playstate/game-core";
 
 type Page = "Overview" | "Quiz library" | "Results & history" | "Settings" | "Quiz editor";
-type Quiz = { id: number; title: string; category: string; questions: number; updated: string; status: "Ready" | "Draft" };
-
-const initialQuizzes: Quiz[] = [];
+type Quiz = { id: string; title: string; category: string; questions: number; updated: string; status: "Ready" | "Draft" };
+const LIBRARY_KEY = "playstate:quiz-library:v1";
+function readLibrary(): QuizDefinition[] { try { const value = JSON.parse(localStorage.getItem(LIBRARY_KEY) ?? "[]"); return Array.isArray(value) ? value.filter(item => item && typeof item.id === "string" && typeof item.title === "string" && Array.isArray(item.questions)) : []; } catch { return []; } }
+function newId(): string { return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `quiz-${Date.now()}`; }
 
 const nav: { label: Page; icon: typeof LayoutDashboard }[] = [
   { label: "Overview", icon: LayoutDashboard },
@@ -21,12 +22,14 @@ const nav: { label: Page; icon: typeof LayoutDashboard }[] = [
 
 export default function App() {
   const [page, setPage] = useState<Page>("Overview");
-  const [quizzes, setQuizzes] = useState(initialQuizzes);
+  const [quizFiles, setQuizFiles] = useState<QuizDefinition[]>(readLibrary);
+  const quizzes: Quiz[] = useMemo(() => quizFiles.map(q => ({ id:q.id, title:q.title, category:"Uncategorised", questions:q.questions.length, updated:"Stored locally", status:q.questions.length && q.questions.every(item => item.prompt.trim() && item.options.every(option => option.text.trim())) ? "Ready" : "Draft" })), [quizFiles]);
+  useEffect(() => { try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(quizFiles)); } catch { setNotice("Local library storage is full or unavailable. Export your quiz files to keep a separate copy."); } }, [quizFiles]);
   const [query, setQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [notice, setNotice] = useState("");
-  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");
+  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");\n  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [importedQuiz, setImportedQuiz] = useState<QuizDefinition | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const filtered = useMemo(() => quizzes.filter(q => (q.title + q.category).toLowerCase().includes(query.toLowerCase())), [quizzes, query]);
@@ -45,7 +48,7 @@ export default function App() {
     reader.onload = () => {
       try {
         const imported = parseQuizFile(String(reader.result ?? ""));
-        setImportedQuiz(imported); setActiveQuiz(imported.title); setPage("Quiz editor");
+        setQuizFiles(current => [imported, ...current.filter(item => item.id !== imported.id)]); setImportedQuiz(imported); setActiveQuiz(imported.title); setActiveQuizId(imported.id); setPage("Quiz editor");
         setNotice(`“${imported.title}” imported as an independent copy. The original file is unchanged.`);
       } catch (error) { setNotice(error instanceof Error ? error.message : "Unable to import this quiz file."); }
       if (importInput.current) importInput.current.value = "";
@@ -73,9 +76,9 @@ export default function App() {
       <div className="page-content">
         {notice && <Toast message={notice} onDismiss={() => setNotice("")}/>}
         {page === "Overview" && <Overview quizzes={quizzes} onCreate={() => setShowCreate(true)} onBrowse={() => setPage("Quiz library")} onOpen={() => setPage("Quiz library")}/>}
-        {page === "Quiz library" && <section><PageHeading eyebrow="YOUR CONTENT" title="Quiz library" subtitle="Build your next great quiz. Your content stays on this device." action={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={17}/> Create quiz</Button>}/><div className="library-toolbar"><label className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search quizzes..." aria-label="Search quizzes"/></label><span className="muted-text">{filtered.length} quizzes</span></div><div className="quiz-list">{filtered.map(q=><QuizRow key={q.id} quiz={q} onClick={()=>setNotice(`“${q.title}” is ready to open in the quiz editor. Editor is the next build milestone.`)}/>)}</div>{filtered.length===0&&<EmptyState title="No quizzes found" detail="Try another search or create a new quiz." onCreate={()=>setShowCreate(true)}/>}</section>}
+        {page === "Quiz library" && <section><PageHeading eyebrow="YOUR CONTENT" title="Quiz library" subtitle="Build your next great quiz. Your content stays on this device." action={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={17}/> Create quiz</Button>}/><div className="library-toolbar"><label className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search quizzes..." aria-label="Search quizzes"/></label><span className="muted-text">{filtered.length} quizzes</span></div><div className="quiz-list">{filtered.map(q=><QuizRow key={q.id} quiz={q} onClick={()=>{const found=quizFiles.find(item=>item.id===q.id);if(found){setImportedQuiz(found);setActiveQuiz(found.title);setActiveQuizId(found.id);setPage("Quiz editor");}}}/>)}</div>{filtered.length===0&&<EmptyState title="No quizzes found" detail="Try another search or create a new quiz." onCreate={()=>setShowCreate(true)}/>}</section>}
         {page === "Results & history" && <section><PageHeading eyebrow="SESSION RECORDS" title="Results & history" subtitle="Your completed quiz sessions will be collected here."/><EmptyState title="No sessions yet" detail="Once you host a quiz, its session summary will appear here." onCreate={()=>setPage("Quiz library")}/></section>}
-        {page === "Quiz editor" && <QuizEditor key={importedQuiz?.id ?? activeQuiz} title={activeQuiz} initialQuiz={importedQuiz} onBack={() => setPage("Quiz library")} onNotice={setNotice}/>}
+        {page === "Quiz editor" && <QuizEditor key={activeQuizId ?? activeQuiz} title={activeQuiz} initialQuiz={quizFiles.find(item=>item.id===activeQuizId) ?? importedQuiz} onQuizChange={updated=>setQuizFiles(current=>current.map(item=>item.id===updated.id?updated:item))} onBack={() => setPage("Quiz library")} onNotice={setNotice}/>}
         {page === "Settings" && <section><PageHeading eyebrow="PREFERENCES" title="Settings" subtitle="Manage your local Playstate experience."/><Card className="settings-card"><div><strong>Appearance</strong><p>Playstate dark cinematic theme</p></div><Status tone="good">Active</Status><div className="settings-divider"/><div><strong>Storage</strong><p>Local-first workspace · No account connected</p></div><Status>On this device</Status><div className="settings-divider"/><div><strong>Application</strong><p>Playstate Preview · Version 0.1.0</p></div><Status tone="live">Preview</Status></Card></section>}
       </div>
       <footer className="app-footer"><span>PLAYSTATE <i>•</i> KNOWLEDGE. COMPETITION. GAME ON.</span><span>PREVIEW BUILD 0.1.0</span></footer>
