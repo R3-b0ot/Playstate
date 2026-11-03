@@ -133,8 +133,13 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
       if (!question.explanation?.trim()) return;
       setHint(question.explanation);
     } else if (id === "shuffle") {
-      setHiddenOptions(current => current);
       setShuffledOptions(question.options.map(option => option.id).sort(() => Math.random() - 0.5));
+    } else if (id === "first-letter") {
+      const answer = question.options.find(option => option.id === question.correctOptionId)?.text ?? "";
+      setHint("Computerji clue — the correct answer begins with: " + (answer.trim()[0] ?? "—"));
+    } else if (id === "answer-length") {
+      const answer = question.options.find(option => option.id === question.correctOptionId)?.text ?? "";
+      setHint("Computerji clue — the correct answer contains " + answer.length + " characters.");
     }
     setUsedLifelines(current => [...current, id]);
     playTone(880, 0.18);
