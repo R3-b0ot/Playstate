@@ -26,6 +26,7 @@ export function validateQuiz(quiz: QuizDefinition): string[] {
     ids.add(q.id);
     if (!q.prompt.trim()) errors.push(`Question ${index + 1} needs a prompt.`);
     if (q.options.length < 2) errors.push(`Question ${index + 1} needs at least two options.`);
+    if (q.options.some(option => !option.text.trim())) errors.push(`Question ${index + 1} has an empty answer option.`);
     const optionIds = new Set(q.options.map(o => o.id));
     if (!optionIds.has(q.correctOptionId)) errors.push(`Question ${index + 1} needs a valid correct answer.`);
     if (new Set(q.options.map(o => o.id)).size !== q.options.length) errors.push(`Question ${index + 1} has duplicate option IDs.`);
