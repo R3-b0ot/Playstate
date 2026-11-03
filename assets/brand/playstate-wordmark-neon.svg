@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 112" role="img" aria-labelledby="title">
+  <title id="title">PLAYSTATE</title>
+  <defs><linearGradient id="playstate-neon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5CE3FC"/><stop offset=".52" stop-color="#B9FC51"/><stop offset="1" stop-color="#EE48BB"/></linearGradient></defs>
+  <g><path fill="url(#playstate-neon)" fill-rule="evenodd" d="M18 8h39c27 0 43 15 43 38S84 84 57 84H43v20L18 89V8Zm27 22v32h12c12 0 18-6 18-16s-6-16-18-16H45Z"/><path fill="#080B16" d="m49 35 24 13-24 13V35Z"/></g>
+  <text x="128" y="78" fill="#F4F7FB" font-family="Inter,Arial,sans-serif" font-size="68" font-weight="800" letter-spacing="1.5">PLAYSTATE</text>
+</svg>
