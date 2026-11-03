@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "title": "Playstate Preview Quiz",
+  "description": "A small sample bank for the browser showcase.",
+  "questions": [
+    {
+      "id": "demo-001",
+      "prompt": "Which planet in our solar system has the most prominent ring system?",
+      "options": [
+        { "id": "A", "text": "Jupiter" },
+        { "id": "B", "text": "Saturn" },
+        { "id": "C", "text": "Neptune" },
+        { "id": "D", "text": "Uranus" }
+      ],
+      "correctOptionId": "B",
+      "explanation": "Saturn has the most visually prominent ring system."
+    },
+    {
+      "id": "demo-002",
+      "prompt": "What does the HTTP status code 404 indicate?",
+      "options": [
+        { "id": "A", "text": "Request timed out" },
+        { "id": "B", "text": "Access forbidden" },
+        { "id": "C", "text": "Resource not found" },
+        { "id": "D", "text": "Server error" }
+      ],
+      "correctOptionId": "C",
+      "explanation": "A 404 response means the requested resource could not be found."
+    },
+    {
+      "id": "demo-003",
+      "prompt": "Which instrument measures atmospheric pressure?",
+      "options": [
+        { "id": "A", "text": "Barometer" },
+        { "id": "B", "text": "Hygrometer" },
+        { "id": "C", "text": "Anemometer" },
+        { "id": "D", "text": "Thermometer" }
+      ],
+      "correctOptionId": "A",
+      "explanation": "A barometer measures atmospheric pressure."
+    }
+  ]
+}
