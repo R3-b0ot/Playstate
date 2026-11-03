@@ -70,8 +70,10 @@ export function selectAnswer(state: SessionState, optionId: string, now = Date.n
 }
 export function lockAnswer(state: SessionState, now = Date.now()): EngineResult {
   active(state); if (state.phase !== "options-visible") throw new EngineError("INVALID_STATE", "Only a visible answer can be locked.");
-  if (state.timer.status === "running") throw new EngineError("INVALID_STATE", "Pause or expire the timer before manually locking.");
-  return result({ ...state, phase: "answer-locked", timer: { ...state.timer, status: state.timer.status === "disabled" ? "disabled" : state.timer.status } }, "AnswerLocked", now, state.selectedOptionId ?? "unanswered");
+  const timer = state.timer.status === "running" && state.timer.startedAt !== null && state.timer.remainingMs !== null
+    ? { ...state.timer, status: "paused" as const, remainingMs: Math.max(0, state.timer.remainingMs - Math.max(0, now - state.timer.startedAt)), startedAt: null }
+    : state.timer;
+  return result({ ...state, phase: "answer-locked", timer }, "AnswerLocked", now, state.selectedOptionId ?? "unanswered");
 }
 export function pauseTimer(state: SessionState, now = Date.now()): EngineResult {
   active(state);
