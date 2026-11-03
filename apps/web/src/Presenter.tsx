@@ -14,7 +14,6 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
   const [hiddenOptions, setHiddenOptions] = useState<string[]>([]);
   const [hint, setHint] = useState("");
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
-  const [doubleChance, setDoubleChance] = useState(false);
   const [selectedLifelines, setSelectedLifelines] = useState<string[]>(["fifty", "extra-time", "computerji-hint", "lucky-elimination"]);
   const [usedLifelines, setUsedLifelines] = useState<string[]>([]);
   const lifelineCatalog = [
