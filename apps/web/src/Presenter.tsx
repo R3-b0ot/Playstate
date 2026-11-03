@@ -41,17 +41,18 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
   useEffect(() => {
     if (mode !== "duo") return;
     const key = `playstate:live:${audienceToken}`;
-    const message = JSON.stringify({ session, quizTitle: quiz.title });
+    const message = JSON.stringify({ session, quizTitle: quiz.title, selectedLifelines, usedLifelines, hiddenOptions, hint });
     try { localStorage.setItem(key, message); } catch { /* popup may still use BroadcastChannel */ }
     const channel = new BroadcastChannel(`playstate:${audienceToken}`);
-    channel.postMessage({ type: "session", payload: { session, quizTitle: quiz.title } });
+    channel.postMessage({ type: "session", payload: { session, quizTitle: quiz.title, selectedLifelines, usedLifelines, hiddenOptions, hint } });
     channel.close();
-  }, [mode, audienceToken, session, quiz.title]);
+  }, [mode, audienceToken, session, quiz.title, selectedLifelines, usedLifelines, hiddenOptions, hint]);
 
   useEffect(() => {
     if (mode !== "duo") return;
     const channel = new BroadcastChannel(`playstate:${audienceToken}`);
     const receive = (event: MessageEvent) => {
+      if (event.data?.type === "lifeline" && typeof event.data.id === "string") { applyLifeline(event.data.id); return; }
       if (event.data?.type !== "answer" || typeof event.data.optionId !== "string") return;
       setSession(current => {
         if (current.phase !== "options-visible") return current;
