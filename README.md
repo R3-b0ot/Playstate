@@ -1,12 +1,30 @@
 # Playstate
 
-**Knowledge. Competition. Game on.**
+<p align="center">
+  <img src="assets/brand/playstate-wordmark-neon.svg" alt="PLAYSTATE — Knowledge. Competition. Game on." width="520" />
+</p>
 
 Playstate is an offline-first live quiz platform for hosted competitions, classrooms, institutions, and corporate events.
 
 The first release is quiz-only. It pairs a browser-playable showcase with a full Windows desktop application that runs locally without an online account or cloud service.
 
 > **Status:** Foundation and architecture planning. The original KBE prototype is being audited; feature parity is not yet verified.
+
+## Approved brand identity
+
+The approved identity is **dark cinematic × neon futuristic**, built around the approved geometric symbol + wordmark system.
+
+| Asset | Purpose |
+|---|---|
+| [Neon wordmark](assets/brand/playstate-wordmark-neon.svg) | Primary brand lockup |
+| [Monochrome wordmark](assets/brand/playstate-wordmark.svg) | Single-colour lockup |
+| [Neon symbol](assets/brand/playstate-mark-neon.svg) | Brand moments and app icon |
+| [Monochrome symbol](assets/brand/playstate-mark.svg) | Compact UI and monochrome use |
+| [Browser favicon](apps/web/public/favicon.svg) | Web identity |
+| [Design tokens](packages/ui/src/styles/tokens.css) | Shared UI styling |
+| [Brand usage guide](assets/brand/README.md) | Asset rules |
+
+These are the approved canonical assets. All future Playstate files and interfaces must use them and the shared design tokens; do not introduce alternate marks or competing palettes.
 
 ## Editions
 
@@ -30,15 +48,16 @@ TypeScript + pnpm workspaces, React + Vite, Zustand for UI state, Zod for valida
 
 ## Planned structure
 
-- `apps/web` — GitHub Pages showcase
-- `apps/desktop` — Tauri desktop application
-- `packages/game-core` — framework-independent quiz engine
-- `packages/data-models` — shared types and validation
-- `packages/ui` — shared interface components
-- `data` — curated demo content
-- `database/migrations` — SQLite migrations
-- `docs` — product, architecture, audit, and roadmap
-- `legacy` — archived KBE source, after audit/import
+- apps/web — GitHub Pages showcase
+- apps/desktop — Tauri desktop application
+- packages/game-core — framework-independent quiz engine
+- packages/data-models — shared types and validation
+- packages/ui — shared interface components and approved design tokens
+- data — curated demo content
+- database/migrations — SQLite migrations
+- docs — product, architecture, audit, brand and roadmap
+- assets/brand — approved vector identity assets
+- legacy — archived KBE source, after audit/import
 
 ## Project history
 
