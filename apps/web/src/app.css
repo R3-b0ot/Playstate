@@ -35,3 +35,24 @@
 .contestant-reveal h2{margin:0;font:700 22px var(--ps-font-display)}
 .contestant-reveal strong{font-size:18px;color:#f4f7fb}
 @media(max-width:700px){.contestant-clock{font-size:18px}.contestant-meta{align-items:flex-start}}
+
+/* Contestant-selected lifeline loadout */
+.lifeline-picker{width:min(900px,100%);margin:8px auto 0;padding:20px;border:1px solid #29364b;border-radius:14px;background:rgba(17,24,39,.76);text-align:left}
+.lifeline-picker-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:16px}
+.lifeline-picker-heading h2{margin:7px 0 4px;font:700 21px var(--ps-font-display)}
+.lifeline-picker-heading p{margin:0;color:#98a4b8;font-size:11px}
+.lifeline-picker-heading>strong{color:#5ce3fc;font:800 18px var(--ps-font-mono)}
+.lifeline-picker-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.lifeline-pick{min-height:112px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:12px;border:1px solid #34465f;border-radius:9px;background:#0c1524;text-align:left;cursor:pointer}
+.lifeline-pick>span{display:grid;place-items:center;width:25px;height:25px;border-radius:7px;background:rgba(92,227,252,.1);color:#5ce3fc;font:800 12px var(--ps-font-mono)}
+.lifeline-pick strong{font:700 11px var(--ps-font-display);color:#f4f7fb}
+.lifeline-pick small{color:#98a4b8;font-size:9px;line-height:1.45}
+.lifeline-pick.selected{border-color:#5ce3fc;background:rgba(92,227,252,.09);box-shadow:inset 0 0 0 1px rgba(92,227,252,.12)}
+.lifeline-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lifeline-hint{padding:15px 18px;border-color:rgba(238,72,187,.35);background:rgba(238,72,187,.06)}
+.lifeline-hint p{margin:8px 0 0;color:#f4f7fb;font-size:13px;line-height:1.6}
+.contestant-lifelines{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px;border:1px solid #29364b;border-radius:10px;background:rgba(17,24,39,.7)}
+.contestant-lifelines .eyebrow{width:100%;margin-bottom:3px}
+.contestant-lifelines button{padding:9px 12px;border:1px solid rgba(92,227,252,.3);border-radius:8px;background:rgba(92,227,252,.07);color:#5ce3fc;font-size:11px;font-weight:700;cursor:pointer}
+.contestant-lifelines button:disabled{opacity:.38;cursor:not-allowed}
+@media(max-width:760px){.lifeline-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lifeline-picker-heading{align-items:flex-start}.lifeline-picker{padding:14px}}
