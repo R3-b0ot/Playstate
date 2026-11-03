@@ -1,0 +1,49 @@
+# Playstate
+
+**Knowledge. Competition. Game on.**
+
+Playstate is an offline-first live quiz platform for hosted competitions, classrooms, institutions, and corporate events.
+
+The first release is quiz-only. It pairs a browser-playable showcase with a full Windows desktop application that runs locally without an online account or cloud service.
+
+> **Status:** Foundation and architecture planning. The original KBE prototype is being audited; feature parity is not yet verified.
+
+## Editions
+
+| Edition | Purpose | Runtime |
+|---|---|---|
+| Web showcase | Instantly playable sample quiz | Static site; GitHub Pages |
+| Desktop | Full quiz authoring and live event operation | Tauri 2 + local SQLite |
+
+## Principles
+
+- Offline first: desktop core workflows work without internet access.
+- One game engine: quiz rules live in a shared TypeScript package.
+- Presenter-led: host controls the session; audience display is a separate read-only view.
+- No mandatory accounts, cloud sync, or telemetry in the initial product.
+- Preserve the original PHP/MySQL KBE project as a separate historical reference.
+- Target WCAG 2.2 AA: keyboard operation, visible focus, contrast, and reduced motion.
+
+## Planned stack
+
+TypeScript + pnpm workspaces, React + Vite, Zustand for UI state, Zod for validation, Tauri 2, SQLite, Vitest, and Playwright. These are planned choices and may be revised if the legacy audit reveals constraints.
+
+## Planned structure
+
+- `apps/web` — GitHub Pages showcase
+- `apps/desktop` — Tauri desktop application
+- `packages/game-core` — framework-independent quiz engine
+- `packages/data-models` — shared types and validation
+- `packages/ui` — shared interface components
+- `data` — curated demo content
+- `database/migrations` — SQLite migrations
+- `docs` — product, architecture, audit, and roadmap
+- `legacy` — archived KBE source, after audit/import
+
+## Project history
+
+Playstate is a new product identity and rebuild of an earlier PHP/MySQL quiz prototype called **KBE — Kaun Banega Entrepreneur**, originally created for a Rotaract event. The original repository remains separate: https://github.com/R3-b0ot/KBE
+
+## License
+
+No license has been selected. Until one is added, all rights are reserved by the copyright holder.
