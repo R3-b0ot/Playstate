@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+target/
+coverage/
+.playwright/
+test-results/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Tauri / Rust
+src-tauri/target/
