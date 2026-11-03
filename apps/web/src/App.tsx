@@ -4,7 +4,8 @@ import playstateWordmark from "../../../assets/brand/playstate-wordmark-neon.svg
 import playstateMark from "../../../assets/brand/playstate-mark-neon.svg";
 import { Activity, Archive, ArrowDownRight, ArrowRight, Bell, BookOpen, ChevronDown, CircleHelp, Clock3, Command, FilePlus2, FolderOpen, Gamepad2, Gauge, LayoutDashboard, Plus, Search, Settings2, Sparkles, Trophy, Upload, Users, WifiOff } from "lucide-react";
 import { Button, Card, Status, Toast } from "@playstate/ui";
-import QuizEditor from "./QuizEditor";\nimport { parseQuizFile, type QuizDefinition } from "@playstate/game-core";
+import QuizEditor from "./QuizEditor";
+import { parseQuizFile, type QuizDefinition } from "@playstate/game-core";
 
 type Page = "Overview" | "Quiz library" | "Results & history" | "Settings" | "Quiz editor";
 type Quiz = { id: number; title: string; category: string; questions: number; updated: string; status: "Ready" | "Draft" };
@@ -25,7 +26,9 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [notice, setNotice] = useState("");
-  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");\n  const [importedQuiz, setImportedQuiz] = useState<QuizDefinition | null>(null);\n  const importInput = useRef<HTMLInputElement>(null);
+  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");
+  const [importedQuiz, setImportedQuiz] = useState<QuizDefinition | null>(null);
+  const importInput = useRef<HTMLInputElement>(null);
   const filtered = useMemo(() => quizzes.filter(q => (q.title + q.category).toLowerCase().includes(query.toLowerCase())), [quizzes, query]);
 
   function createQuiz() {
@@ -35,7 +38,23 @@ export default function App() {
     setNewTitle(""); setShowCreate(false); setActiveQuiz(title); setImportedQuiz(null); setPage("Quiz editor"); setNotice(`“${title}” created as a local draft.`);
   }
 
-  function importQuizFile(file?: File) {\n    if (!file) return;\n    if (!file.name.toLowerCase().endsWith(".playstate")) { setNotice("Choose a Playstate .playstate quiz file."); return; }\n    const reader = new FileReader();\n    reader.onload = () => {\n      try {\n        const imported = parseQuizFile(String(reader.result ?? ""));\n        setImportedQuiz(imported); setActiveQuiz(imported.title); setPage("Quiz editor");\n        setNotice(`“${imported.title}” imported as an independent copy. The original file is unchanged.`);\n      } catch (error) { setNotice(error instanceof Error ? error.message : "Unable to import this quiz file."); }\n      if (importInput.current) importInput.current.value = "";\n    };\n    reader.onerror = () => setNotice("The selected quiz file could not be read.");\n    reader.readAsText(file);\n  }\n\n  return <div className="app-shell">
+  function importQuizFile(file?: File) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".playstate")) { setNotice("Choose a Playstate .playstate quiz file."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const imported = parseQuizFile(String(reader.result ?? ""));
+        setImportedQuiz(imported); setActiveQuiz(imported.title); setPage("Quiz editor");
+        setNotice(`“${imported.title}” imported as an independent copy. The original file is unchanged.`);
+      } catch (error) { setNotice(error instanceof Error ? error.message : "Unable to import this quiz file."); }
+      if (importInput.current) importInput.current.value = "";
+    };
+    reader.onerror = () => setNotice("The selected quiz file could not be read.");
+    reader.readAsText(file);
+  }
+
+  return <div className="app-shell">
     <aside className="sidebar">
       <button className="brand-lockup" onClick={() => setPage("Overview")} aria-label="Playstate home">
         <img src={playstateWordmark} alt="Playstate — home" />
