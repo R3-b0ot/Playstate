@@ -7,16 +7,20 @@ Milestones are gated by verification. A feature is complete only when acceptance
 - [x] Create Playstate repository.
 - [x] Establish product brief and architecture direction.
 - [x] Record initial legacy feature inventory.
-- [ ] Add workspace manifests and TypeScript configuration.
+- [x] Add workspace manifests and TypeScript configuration.
 - [ ] Add CI checks and contribution conventions.
 
 ## Phase 1 — Legacy audit and specification
 
-- [ ] Inventory all legacy source files and assets.
-- [ ] Verify each feature against source and runtime behaviour.
-- [ ] Extract and validate the question bank.
-- [ ] Document prize ladder, safe-harbour, scoring, and timer rules.
-- [ ] Specify presenter and audience-display workflows.
+- [x] Inventory legacy source files and primary assets.
+- [x] Review primary PHP, JavaScript, CSS, HTML, and SQL source.
+- [x] Record verified behaviour, known defects, and migration requirements.
+- [x] Draft shared game-engine specification.
+- [ ] Inspect original visual assets and verify layout on a running copy.
+- [ ] Extract and validate the question bank for migration.
+- [ ] Confirm timer boundary and expiry behaviour.
+- [ ] Confirm scoring, safe-harbour, and wrong-answer rules (if any).
+- [ ] Approve presenter and audience-display workflow.
 - [ ] Approve game-state model and event lifecycle.
 
 Exit: traceable feature matrix and approved game-engine specification.
