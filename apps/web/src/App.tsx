@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import playstateWordmark from "../../../assets/brand/playstate-wordmark-neon.svg";
 import playstateMark from "../../../assets/brand/playstate-mark-neon.svg";
@@ -29,7 +29,7 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [notice, setNotice] = useState("");
-  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");\n  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
+  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");\n  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);\n  const updateQuiz = useCallback((updated: QuizDefinition) => setQuizFiles(current => current.map(item => item.id === updated.id ? updated : item)), []);
   const [importedQuiz, setImportedQuiz] = useState<QuizDefinition | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const filtered = useMemo(() => quizzes.filter(q => (q.title + q.category).toLowerCase().includes(query.toLowerCase())), [quizzes, query]);
@@ -78,7 +78,7 @@ export default function App() {
         {page === "Overview" && <Overview quizzes={quizzes} onCreate={() => setShowCreate(true)} onBrowse={() => setPage("Quiz library")} onOpen={() => setPage("Quiz library")}/>}
         {page === "Quiz library" && <section><PageHeading eyebrow="YOUR CONTENT" title="Quiz library" subtitle="Build your next great quiz. Your content stays on this device." action={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={17}/> Create quiz</Button>}/><div className="library-toolbar"><label className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search quizzes..." aria-label="Search quizzes"/></label><span className="muted-text">{filtered.length} quizzes</span></div><div className="quiz-list">{filtered.map(q=><QuizRow key={q.id} quiz={q} onClick={()=>{const found=quizFiles.find(item=>item.id===q.id);if(found){setImportedQuiz(found);setActiveQuiz(found.title);setActiveQuizId(found.id);setPage("Quiz editor");}}}/>)}</div>{filtered.length===0&&<EmptyState title="No quizzes found" detail="Try another search or create a new quiz." onCreate={()=>setShowCreate(true)}/>}</section>}
         {page === "Results & history" && <section><PageHeading eyebrow="SESSION RECORDS" title="Results & history" subtitle="Your completed quiz sessions will be collected here."/><EmptyState title="No sessions yet" detail="Once you host a quiz, its session summary will appear here." onCreate={()=>setPage("Quiz library")}/></section>}
-        {page === "Quiz editor" && <QuizEditor key={activeQuizId ?? activeQuiz} title={activeQuiz} initialQuiz={quizFiles.find(item=>item.id===activeQuizId) ?? importedQuiz} onQuizChange={updated=>setQuizFiles(current=>current.map(item=>item.id===updated.id?updated:item))} onBack={() => setPage("Quiz library")} onNotice={setNotice}/>}
+        {page === "Quiz editor" && <QuizEditor key={activeQuizId ?? activeQuiz} title={activeQuiz} initialQuiz={quizFiles.find(item=>item.id===activeQuizId) ?? importedQuiz} onQuizChange={updateQuiz} onBack={() => setPage("Quiz library")} onNotice={setNotice}/>}
         {page === "Settings" && <section><PageHeading eyebrow="PREFERENCES" title="Settings" subtitle="Manage your local Playstate experience."/><Card className="settings-card"><div><strong>Appearance</strong><p>Playstate dark cinematic theme</p></div><Status tone="good">Active</Status><div className="settings-divider"/><div><strong>Storage</strong><p>Local-first workspace · No account connected</p></div><Status>On this device</Status><div className="settings-divider"/><div><strong>Application</strong><p>Playstate Preview · Version 0.1.0</p></div><Status tone="live">Preview</Status></Card></section>}
       </div>
       <footer className="app-footer"><span>PLAYSTATE <i>•</i> KNOWLEDGE. COMPETITION. GAME ON.</span><span>PREVIEW BUILD 0.1.0</span></footer>
