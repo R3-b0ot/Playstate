@@ -23,6 +23,8 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     { id: "clock-freeze", name: "Clock Freeze", detail: "Pause the countdown; Computerji can resume it.", icon: "Ⅱ" },
     { id: "computerji-hint", name: "Computerji Hint", detail: "Reveal the explanation supplied with this question.", icon: "?" },
     { id: "shuffle", name: "Option Shuffle", detail: "Reorder the answer options.", icon: "↝" },
+    { id: "first-letter", name: "First Letter", detail: "Reveal the first letter of the correct option.", icon: "A" },
+    { id: "answer-length", name: "Answer Length", detail: "Reveal the character count of the correct option.", icon: "#" }
   ];
   const [audienceToken] = useState(() => crypto.randomUUID());
   const [contestantWindow, setContestantWindow] = useState<Window | null>(null);
