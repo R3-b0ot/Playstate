@@ -45,7 +45,7 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     const channel = new BroadcastChannel(`playstate:${audienceToken}`);
     channel.postMessage({ type: "session", payload: { session, quizTitle: quiz.title, selectedLifelines, usedLifelines, hiddenOptions, shuffledOptions, hint } });
     channel.close();
-  }, [mode, audienceToken, session, quiz.title, selectedLifelines, usedLifelines, hiddenOptions, hint]);
+  }, [mode, audienceToken, session, quiz.title, selectedLifelines, usedLifelines, hiddenOptions, shuffledOptions, hint]);
 
   useEffect(() => {
     if (mode !== "duo") return;
@@ -179,7 +179,7 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
         {session.phase==="options-visible" && timerRunning && <Button variant="secondary" onClick={()=>run((state,at)=>pauseTimer(state,at))}><Pause size={15}/> Pause timer</Button>}
         {session.phase==="options-visible" && mode==="solo" && <div className="lifeline-toolbar">{selectedLifelines.map(id=>{const item=lifelineCatalog.find(entry=>entry.id===id)!;return <Button key={id} variant="secondary" disabled={usedLifelines.includes(id) || (id==="computerji-hint"&&!question.explanation) || ((id==="extra-time"||id==="clock-freeze")&&session.timer.status==="disabled")} onClick={()=>handleLifeline(id)}>{item.name}{usedLifelines.includes(id)?" · USED":""}</Button>;})}<Button variant="secondary" onClick={()=>run((state,at)=>{const paused=state.timer.status==="running" ? pauseTimer(state,at).state : state;return lockAnswer(paused,at);})}>Lock answer</Button></div>}
         {session.phase==="answer-locked" && <Button variant="primary" onClick={()=>run((state,at)=>revealAnswer(state,at))}>Reveal correct answer</Button>}
-        {correct && <Button variant="primary" onClick={()=>{setHiddenOptions([]);setHint("");setShuffledOptions([]);setUsedLifelines([]);setSession(state=>nextQuestion(state).state);}}>Next question <Play size={15}/></Button>}
+        {correct && <Button variant="primary" onClick={()=>{setHiddenOptions([]);setHint("");setShuffledOptions([]);setSession(state=>nextQuestion(state).state);}}>Next question <Play size={15}/></Button>}
         {finished && <Button variant="secondary" onClick={onExit}><ArrowLeft size={15}/> Back to library</Button>}
         {!finished && <Button variant="quiet" onClick={()=>{if(window.confirm("End this quiz session?"))run((state,at)=>endSession(state,at));}}><RotateCcw size={15}/> End session</Button>}
       </div></Card>}
