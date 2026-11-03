@@ -6,7 +6,7 @@
 
 Playstate is an offline-first live quiz platform for hosted competitions, classrooms, institutions, and corporate events.
 
-The first release is quiz-only. It pairs a browser-playable showcase with a full Windows desktop application that runs locally without an online account or cloud service.
+The first release is quiz-only. The web edition is a standalone, offline-capable quiz authoring and play experience built around portable `.playstate` files. A Windows desktop edition is planned separately.
 
 > **Status:** Foundation and architecture planning. The original KBE prototype is being audited; feature parity is not yet verified.
 
@@ -38,7 +38,7 @@ These are the approved canonical assets. All future Playstate files and interfac
 - Offline first: desktop core workflows work without internet access.
 - One game engine: quiz rules live in a shared TypeScript package.
 - Presenter-led: host controls the session; audience display is a separate read-only view.
-- No mandatory accounts, cloud sync, or telemetry in the initial product.
+- No mandatory accounts, cloud sync, or telemetry in the initial product.\n- User-owned quiz files: importing a `.playstate` file creates an independent copy; saving exports a new file.\n- Browser storage is a recovery aid, not the authoritative copy. Users keep their quiz files.
 - Preserve the original PHP/MySQL KBE project as a separate historical reference.
 - Target WCAG 2.2 AA: keyboard operation, visible focus, contrast, and reduced motion.
 
@@ -48,7 +48,7 @@ TypeScript + pnpm workspaces, React + Vite, Zustand for UI state, Zod for valida
 
 ## Planned structure
 
-- apps/web — GitHub Pages showcase
+- apps/web — GitHub Pages browser app
 - apps/desktop — Tauri desktop application
 - packages/game-core — framework-independent quiz engine
 - packages/data-models — shared types and validation
