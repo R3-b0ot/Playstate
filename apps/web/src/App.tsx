@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import playstateWordmark from "../../../assets/brand/playstate-wordmark-neon.svg";
 import playstateMark from "../../../assets/brand/playstate-mark-neon.svg";
 import { Activity, Archive, ArrowDownRight, ArrowRight, Bell, BookOpen, ChevronDown, CircleHelp, Clock3, Command, FilePlus2, FolderOpen, Gamepad2, Gauge, LayoutDashboard, Plus, Search, Settings2, Sparkles, Trophy, Upload, Users, WifiOff } from "lucide-react";
-import { Button, Card, Status } from "@playstate/ui";
+import { Button, Card, Status, Toast } from "@playstate/ui";
 import QuizEditor from "./QuizEditor";
 
 type Page = "Overview" | "Quiz library" | "Results & history" | "Settings" | "Quiz editor";
@@ -52,7 +52,7 @@ export default function App() {
     <main className="main-area">
       <header className="topbar"><div className="breadcrumb"><span>PLAYSTATE</span><ArrowRight size={13}/><strong>{page}</strong></div><div className="top-actions"><Status tone="good">All changes saved</Status><button className="icon-btn" aria-label="Notifications"><Bell size={17}/></button><div className="top-avatar">R</div></div></header>
       <div className="page-content">
-        {notice && <div className="notice" role="status">{notice}<button onClick={() => setNotice("")}>Dismiss</button></div>}
+        {notice && <Toast message={notice} onDismiss={() => setNotice("")}/>}
         {page === "Overview" && <Overview quizzes={quizzes} onCreate={() => setShowCreate(true)} onBrowse={() => setPage("Quiz library")} onOpen={() => setPage("Quiz library")}/>}
         {page === "Quiz library" && <section><PageHeading eyebrow="YOUR CONTENT" title="Quiz library" subtitle="Build your next great quiz. Your content stays on this device." action={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={17}/> Create quiz</Button>}/><div className="library-toolbar"><label className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search quizzes..." aria-label="Search quizzes"/></label><span className="muted-text">{filtered.length} quizzes</span></div><div className="quiz-list">{filtered.map(q=><QuizRow key={q.id} quiz={q} onClick={()=>setNotice(`“${q.title}” is ready to open in the quiz editor. Editor is the next build milestone.`)}/>)}</div>{filtered.length===0&&<EmptyState title="No quizzes found" detail="Try another search or create a new quiz." onCreate={()=>setShowCreate(true)}/>}</section>}
         {page === "Results & history" && <section><PageHeading eyebrow="SESSION RECORDS" title="Results & history" subtitle="Your completed quiz sessions will be collected here."/><EmptyState title="No sessions yet" detail="Once you host a quiz, its session summary will appear here." onCreate={()=>setPage("Quiz library")}/></section>}
