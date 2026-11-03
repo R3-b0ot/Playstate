@@ -1,8 +1,12 @@
 # Playstate — UI layout specification
 
 **Status:** Layout proposal 0.1  
-**Visual direction:** Dark cinematic × neon futuristic  
+**Visual direction:** Approved dark cinematic × neon futuristic  
 **Targets:** Browser showcase and Windows desktop application
+
+## Mandatory brand integration
+
+All UI work must use the approved identity assets and shared design tokens. Primary lockup: `assets/brand/playstate-wordmark-neon.svg`. Compact symbol: `assets/brand/playstate-mark.svg` or `assets/brand/playstate-mark-neon.svg`. Monochrome lockup: `assets/brand/playstate-wordmark.svg`. Favicon: `apps/web/public/favicon.svg`. Shared CSS tokens: `packages/ui/src/styles/tokens.css`. Do not redraw the logo or introduce competing marks or palettes.
 
 ## Product navigation
 
@@ -19,7 +23,7 @@ Do not add game-mode navigation in the first release. A live session should be l
 
 ### Desktop layout
 
-- **Left rail:** Playstate symbol/wordmark, primary navigation, app version and connection/storage status.
+- **Left rail:** approved Playstate symbol/wordmark, primary navigation, app version and connection/storage status.
 - **Top bar:** Page title, current workspace/library context, primary Create Quiz action.
 - **Main content:** Welcome/quick action area with Create Quiz, Open Quizzes and Start/Resume Session.
 - **Recent area:** Recently edited quizzes and recent session summaries.
