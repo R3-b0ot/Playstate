@@ -1,14 +1,27 @@
-# Game engine specification — draft 0.1
+# Game engine specification — draft 0.2
 
-**Status:** Draft derived from static review of KBE source. Proposed contract, not implemented behaviour. Confirm timer boundary and scoring policy before final approval.
+**Status:** Gameplay rules confirmed by product owner. Architecture and transition contract are specified; implementation and runtime tests are still pending.
+
+## Confirmed gameplay rules
+
+1. Timer durations are based on the question's position in the active session:
+   - Questions 1–4: 60 seconds each.
+   - Questions 5–9: 120 seconds each.
+   - Question 10 onwards: 60 seconds each.
+2. When the timer expires, the engine automatically locks the current answer state. If no answer was selected, it records the question as unanswered. The host must explicitly reveal the result.
+3. An incorrect answer ends the participant's run. No subsequent question may be played in that session.
+
+These are deliberate Playstate rules. The 60-second duration from question 10 onwards is the confirmed product choice, even though the legacy source appears to have intended 150 seconds for questions after question 10.
 
 ## Domain model
 
 A Quiz is a named, versioned collection of ordered questions and optional progression configuration.
 
-A Question has a stable ID, prompt, two or more answer options (initial legacy migration supports A–D), correct option ID, and optional explanation, category, difficulty, media, and timer override.
+A Question has a stable ID, prompt, two or more answer options (legacy migration initially supports A–D), correct option ID, and optional explanation, category, difficulty, media, and timer override.
 
-A Quiz Session is a runtime instance created from a quiz snapshot. It stores session ID and lifecycle status, quiz snapshot/version, ordered question IDs, current index, current question state, timer configuration and remaining time, progression configuration/current milestone, and timestamps.
+A Quiz Session is a runtime instance created from a quiz snapshot. It stores session ID and lifecycle status, quiz snapshot/version, ordered question IDs, current index, current question state, timer configuration and remaining time, progression configuration/current milestone, participant outcome, and timestamps.
+
+A question-level timer override may be supported for custom quiz formats. Unless a quiz explicitly enables overrides, the confirmed session-position defaults above apply.
 
 ## Question states
 
@@ -20,11 +33,20 @@ A Quiz Session is a runtime instance created from a quiz snapshot. It stores ses
 
 Visibility and timer status are separate state dimensions and must not be coupled to one UI click.
 
-## Session lifecycle
+## Session lifecycle and participant outcome
 
-`draft → ready → running → completed`
+Session lifecycle: `draft → ready → running → completed`.
 
 A running session may be paused and resumed. A host may end a running session early. Reset creates a clean session or explicitly resets the current one after confirmation; it must not leave a stale question pointer.
+
+Participant outcome is tracked separately from session lifecycle:
+- `in-progress`
+- `won` (all configured questions completed successfully)
+- `lost` (an incorrect answer ends the run)
+- `ended-by-host`
+- `timed-out` (optional display classification for an unanswered expiry; the session is treated as unsuccessful)
+
+A wrong answer sets the participant outcome to `lost` and ends the run immediately after the host reveals the answer. The engine must not permit Next Question after a loss. Timer expiry with no selection locks the question as unanswered; after the host reveals the result, it is treated as an unsuccessful answer and the run ends. If a selected answer is locked by expiry, the host reveals whether it was correct; an incorrect selection ends the run, while a correct selection may continue.
 
 ## Commands and transitions
 
@@ -32,43 +54,46 @@ A running session may be paused and resumed. A host may end a running session ea
 |---|---|---|
 | Start session | Session is ready | First question becomes current; timer is prepared |
 | Reveal options | Current question is hidden | Options become visible |
-| Start timer | Timer is idle or paused | Countdown runs |
+| Start timer | Timer is idle or paused; question accepts answers | Countdown runs |
 | Pause timer | Timer is running | Countdown pauses with remaining time preserved |
 | Resume timer | Timer is paused | Countdown resumes |
 | Select answer | Options visible; answer not locked | Selected option changes |
 | Lock answer | Options visible; answer not locked | Selection freezes; timer stops |
-| Reveal answer | Answer is locked | Correct option and outcome are revealed |
-| Next question | Current question is revealed/completed | Move forward and initialise next question |
-| End session | Session is running or paused | Session is ended |
+| Timer expires | Timer is running and reaches zero | Engine locks selection or records unanswered; emits expiry and lock events |
+| Reveal answer | Answer is locked | Correct option and outcome are revealed; incorrect/unanswered outcome ends the run |
+| Next question | Current answer is revealed and participant remains in progress | Move forward and initialise next question |
+| End session | Session is running or paused | Session is ended by host |
 | Reset session | Host confirms | New clean session; selection and timer state cleared |
 
-Invalid transitions return typed errors. The UI must reflect the commands currently available.
+Invalid transitions return typed errors. The UI must reflect the commands currently available. Locking is irreversible for that question; there is no post-lock answer change. A host reset starts a clean session rather than silently unlocking an answer in the same run.
 
-## Timer policy
+## Timer policy and expiry
 
-Legacy source defaults:
-- Question numbers 1–4: 60 seconds.
-- 5–9: 120 seconds.
-- 10+: likely intended 150 seconds, but legacy code accidentally assigns 60 seconds to question 10.
+The confirmed default schedule is 60 seconds for questions 1–4, 120 seconds for questions 5–9, and 60 seconds for question 10 onwards.
 
-Proposed corrected default is 60 seconds for 1–4, 120 seconds for 5–9, and 150 seconds for 10+, pending owner confirmation. A question-level override takes precedence.
+Timer expiry is an engine transition, not merely a visual countdown reaching zero:
+- Freeze the timer at zero.
+- Lock the current selection.
+- If no selection exists, store an explicit unanswered state.
+- Emit `TimerExpired` and `AnswerLocked` domain events.
+- Do not reveal the correct answer automatically.
+- Wait for the host to reveal the answer.
+- After reveal, an incorrect or unanswered result ends the participant's run; a correct selected answer can proceed.
 
-Timer expiry must be explicit. Recommended behaviour: emit an expiry event and lock the current answer state; if no answer is selected, lock as unanswered. Do not automatically reveal correctness or advance without presenter action.
-
-Timer ticking uses an injectable clock/time source so tests are deterministic. UI intervals are not the source of truth.
+Timer ticking uses an injectable clock/time source so tests are deterministic. UI intervals are not the source of truth. Pausing and resuming preserve remaining time.
 
 ## Progression policy
 
 Legacy display ladder (question number → score):
 1→10, 2→20, 3→40, 4→80, 5→100, 6→150, 7→200, 8→300, 9→600, 10→800, 11→1200, 12→1500, 13→2000.
 
-This is a display ladder only. Safe-harbour levels, fallback winnings, score award timing, and wrong-answer consequences are not established by the inspected source. Keep these configurable; do not infer rules from the television format.
+This is a display ladder only. Safe-harbour levels, fallback winnings, and score award timing are not established by the inspected source. Keep these configurable; do not infer rules from the television format. An incorrect answer ends the run, but any retained prize/score amount must follow an explicitly configured progression policy rather than an assumed safe-harbour rule.
 
 ## Events and persistence
 
 The core is pure and framework-independent. Commands return a new state plus domain events. Persistence and UI are adapters.
 
-Potential events: SessionStarted, QuestionChanged, OptionsRevealed, TimerStarted, TimerPaused, TimerResumed, TimerExpired, AnswerSelected, AnswerLocked, AnswerRevealed, SessionEnded, SessionReset.
+Potential events: SessionStarted, QuestionChanged, OptionsRevealed, TimerStarted, TimerPaused, TimerResumed, TimerExpired, AnswerSelected, AnswerLocked, AnswerRevealed, ParticipantLost, SessionEnded, SessionReset.
 
 Persist enough state to recover an interrupted desktop session safely. Event history supports presenter feedback and diagnostics; it is not analytics and is not transmitted over a network.
 
@@ -82,9 +107,10 @@ Persist enough state to recover an interrupted desktop session safely. Event his
 - Locked answers cannot change.
 - Revealed answers must already be locked.
 - Remaining timer duration cannot be negative.
-- Completed sessions reject question and answer commands.
+- A lost, won, or host-ended participant run cannot accept another question.
+- An unanswered timer expiry is distinct from a selected answer.
 - Progression values are ordered and explicitly configured.
 
 ## Testing
 
-Use table-driven tests for every command, valid/invalid transition, timer boundary, progression boundary, missing answer, and end-of-quiz case. Use a fake clock for timer tests. Test presenter/display projection separately from the engine.
+Use table-driven tests for every command, valid/invalid transition, timer boundaries (questions 4/5, 9/10, and 10/11), expiry with and without a selected answer, correct/incorrect/unanswered reveal outcomes, loss preventing further progression, missing answer, and end-of-quiz. Use a fake clock for timer tests. Test presenter/display projection separately from the engine.
