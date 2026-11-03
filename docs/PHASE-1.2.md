@@ -94,3 +94,8 @@ The web application now includes a presenter-led live quiz flow:
 The workflow now typechecks and builds the app, then deploys to GitHub Pages on pushes to `main`. GitHub Actions cannot enable Pages for this repository because its token lacks that repository-administration permission. A repository owner must perform the one-time setup: Settings → Pages → Build and deployment → Source → GitHub Actions. After that, the workflow can publish automatically.
 
 The app's Vite base path is configured for `/Playstate/`. CI confirms TypeScript checking and production bundling; actual browser interaction and the first Pages deployment still need verification.
+
+
+## Session history
+
+Completed presenter sessions now emit a local summary containing quiz title, question count, outcome and completion timestamp. The web app stores these summaries in browser local storage and displays them under Results & History. This is a local summary only; it does not yet include per-question answer analytics, participant identities, prize ladder or exportable reports.
