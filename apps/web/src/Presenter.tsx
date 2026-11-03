@@ -47,14 +47,17 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     }
   }, [session.status, session.outcome, quiz, onComplete]);
 
-  function begin() { setShowIntro(false); if (mode === "duo") { const popup = window.open(`${window.location.pathname}?audience=${audienceToken}`, "playstate-contestant", "popup,width=1100,height=780"); if (popup) setContestantWindow(popup); } }\n  function playTone(frequency=620, duration=0.08) { if (!soundOn) return; try { const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext; const context = new AudioContextClass(); const oscillator = context.createOscillator(); const gain = context.createGain(); oscillator.type = "sine"; oscillator.frequency.value = frequency; gain.gain.setValueAtTime(0.0001, context.currentTime); gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration); oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + duration); oscillator.onended = () => context.close(); } catch { /* audio is optional */ } }\n  function useFiftyFifty() { if (lifelines.fifty || session.phase !== "options-visible") return; const wrong = question.options.filter(o => o.id !== question.correctOptionId); setHiddenOptions(wrong.slice(0,2).map(o=>o.id)); setLifelines(v=>({...v,fifty:true})); playTone(880,0.18); }
+  function begin() { setShowIntro(false); if (mode === "duo") { const popup = window.open(`${window.location.pathname}?audience=${audienceToken}`, "playstate-contestant", "popup,width=1100,height=780"); if (popup) setContestantWindow(popup); } }
+  function playTone(frequency=620, duration=0.08) { if (!soundOn) return; try { const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext; const context = new AudioContextClass(); const oscillator = context.createOscillator(); const gain = context.createGain(); oscillator.type = "sine"; oscillator.frequency.value = frequency; gain.gain.setValueAtTime(0.0001, context.currentTime); gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration); oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + duration); oscillator.onended = () => context.close(); } catch { /* audio is optional */ } }
+  function useFiftyFifty() { if (lifelines.fifty || session.phase !== "options-visible") return; const wrong = question.options.filter(o => o.id !== question.correctOptionId); setHiddenOptions(wrong.slice(0,2).map(o=>o.id)); setLifelines(v=>({...v,fifty:true})); playTone(880,0.18); }
   function toggleFullscreen() {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => undefined);
     else document.exitFullscreen?.().catch(() => undefined);
   }
   const finished = session.status === "completed";
   const correct = session.phase === "answer-revealed" && session.outcome === "in-progress";
-  const seconds = remaining === null ? null : Math.ceil(remaining / 1000);\n  useEffect(() => { if (seconds !== null && seconds !== lastTick.current) { lastTick.current = seconds; if (seconds <= 10 && seconds >= 0) playTone(seconds <= 3 ? 880 : 520, 0.045); } }, [seconds]);
+  const seconds = remaining === null ? null : Math.ceil(remaining / 1000);
+  useEffect(() => { if (seconds !== null && seconds !== lastTick.current) { lastTick.current = seconds; if (seconds <= 10 && seconds >= 0) playTone(seconds <= 3 ? 880 : 520, 0.045); } }, [seconds]);
   return <div className={`presenter-shell ${audience ? "presenter-audience" : ""}`}>
     <header className="presenter-toolbar">
       <button className="presenter-back" onClick={onExit}><ArrowLeft size={16}/> Exit session</button>
