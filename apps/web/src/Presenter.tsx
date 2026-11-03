@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnswerOption, Button, Card, Status } from "@playstate/ui";
 import { ArrowLeft, Clock3, Eye, EyeOff, Maximize2, Pause, Play, RotateCcw } from "lucide-react";
 import { createSession, endSession, expireTimer, lockAnswer, nextQuestion, pauseTimer, resumeTimer, revealAnswer, revealOptions, selectAnswer, startSession, startTimer, type QuizDefinition, type SessionState } from "@playstate/game-core";
 
-export default function Presenter({ quiz, onExit }: { quiz: QuizDefinition; onExit: () => void }) {
+export type PresenterSummary = { quizTitle: string; totalQuestions: number; outcome: SessionState["outcome"]; completedAt: string };\n\nexport default function Presenter({ quiz, onExit, onComplete }: { quiz: QuizDefinition; onExit: () => void; onComplete?: (summary: PresenterSummary) => void }) {
   const [session, setSession] = useState<SessionState>(() => startSession(createSession(quiz).state).state);
   const [now, setNow] = useState(Date.now());
   const [audience, setAudience] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(true);\n  const reported = useRef(false);
   const question = session.quiz.questions[session.questionIndex];
   const timerRunning = session.timer.status === "running";
   const remaining = useMemo(() => session.timer.status === "running" && session.timer.startedAt !== null && session.timer.remainingMs !== null
@@ -30,7 +30,7 @@ export default function Presenter({ quiz, onExit }: { quiz: QuizDefinition; onEx
     try { const at = Date.now(); setSession(action(session, at).state); setNow(at); }
     catch (error) { window.alert(error instanceof Error ? error.message : "That action is not available."); }
   }
-  function begin() { setShowIntro(false); }
+  useEffect(() => {\n    if (session.status === "completed" && !reported.current) {\n      reported.current = true;\n      onComplete?.({ quizTitle: quiz.title, totalQuestions: quiz.questions.length, outcome: session.outcome, completedAt: new Date().toISOString() });\n    }\n  }, [session.status, session.outcome, quiz, onComplete]);\n\n  function begin() { setShowIntro(false); }
   function toggleFullscreen() {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => undefined);
     else document.exitFullscreen?.().catch(() => undefined);
