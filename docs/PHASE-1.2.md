@@ -74,3 +74,23 @@ The web workspace now stores the user's quiz collection in browser local storage
 Browser local storage is device- and browser-profile-specific, can be cleared by the user/browser, and has finite quota. It is not a substitute for exporting and keeping the portable `.playstate` file. No cloud sync or account storage is introduced.
 
 Verification still requires the next GitHub Actions run and manual browser checks, including reload persistence, editing/reopening, import-as-copy, delete behaviour, quota handling, and export/import round trips.
+
+
+## Functional web demo — presenter integration
+
+The web application now includes a presenter-led live quiz flow:
+- A bundled five-question `The Playstate Challenge` quiz is seeded on first launch only; if a user intentionally removes all quizzes, the empty library remains empty on reload.
+- A validated quiz can be launched directly from the library.
+- Host controls reveal question/options, start/pause/resume the countdown, lock the answer, reveal the correct answer, advance after correct answers, and end a session.
+- Timer behaviour follows the confirmed policy: Q1–4 60 seconds, Q5–9 120 seconds, Q10+ untimed.
+- Timer expiry locks the answer; revealing remains a separate host action.
+- Audience view hides host controls and conceals the question until reveal; the host can switch back to host view.
+- Fullscreen presentation is available.
+- The demo uses one browser window and a view toggle; a separate synchronized audience window is not implemented yet.
+- Session summaries are shown at the end of the live session but are not yet persisted into Results & History.
+
+## Publishing
+
+The workflow now typechecks and builds the app, then deploys to GitHub Pages on pushes to `main`. GitHub Actions cannot enable Pages for this repository because its token lacks that repository-administration permission. A repository owner must perform the one-time setup: Settings → Pages → Build and deployment → Source → GitHub Actions. After that, the workflow can publish automatically.
+
+The app's Vite base path is configured for `/Playstate/`. CI confirms TypeScript checking and production bundling; actual browser interaction and the first Pages deployment still need verification.
