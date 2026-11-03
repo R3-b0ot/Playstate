@@ -116,6 +116,7 @@ export default function App() {
 
 function ContestantWindow({token}:{token:string}) {
  const [payload,setPayload] = useState<any>(()=>{try{return JSON.parse(localStorage.getItem(`playstate:live:${token}`)??"null")}catch{return null}});
+ const [now,setNow] = useState(Date.now());
  useEffect(()=>{
    const key=`playstate:live:${token}`;
    const apply=(value:string|null)=>{if(!value)return;try{setPayload(JSON.parse(value))}catch{/* ignore malformed host state */}};
@@ -126,19 +127,31 @@ function ContestantWindow({token}:{token:string}) {
    const update=(event:StorageEvent)=>{if(event.key===key)apply(event.newValue)};
    window.addEventListener("storage",update);
    const poll=window.setInterval(()=>apply(localStorage.getItem(key)),500);
-   return()=>{channel.close();window.removeEventListener("storage",update);window.clearInterval(poll)};
+   const clock=window.setInterval(()=>setNow(Date.now()),200);
+   return()=>{channel.close();window.removeEventListener("storage",update);window.clearInterval(poll);window.clearInterval(clock)};
  },[token]);
  function choose(optionId:string){
+   if(!payload?.session || payload.session.phase!=="options-visible" || payload.session.selectedOptionId) return;
    const message={optionId,at:Date.now()};
+   setPayload((current:any)=>current?.session ? {...current,session:{...current.session,selectedOptionId:optionId,phase:"answer-locked",timer:{...current.session.timer,status:current.session.timer.status==="disabled"?"disabled":"paused",remainingMs:current.session.timer.startedAt!==null&&current.session.timer.remainingMs!==null?Math.max(0,current.session.timer.remainingMs-(message.at-current.session.timer.startedAt)):current.session.timer.remainingMs,startedAt:null}}} : current);
    try{localStorage.setItem(`playstate:answer:${token}`,JSON.stringify(message))}catch{/* channel remains available */}
    const channel=new BroadcastChannel(`playstate:${token}`);
    channel.postMessage({type:"answer",...message});
    channel.close();
  }
- if(!payload?.session) return <div className="contestant-window"><header><img src={playstateMark} alt=""/><span>PLAYSTATE · CONTESTANT</span></header><div className="contestant-body"><h1>Waiting for Computerji…</h1><p>Keep this window open. The quiz will appear when the host starts the show.</p></div></div>;
+ if(!payload?.session) return <div className="contestant-window"><header><img src={playstateMark} alt=""/><span>PLAYSTATE · CONTESTANT</span></header><div className="contestant-body"><h1>Waiting for Computerji…</h1><p>Keep this window open. The question will appear when the host shares it.</p></div></div>;
  const s=payload.session; const q=s.quiz.questions[s.questionIndex];
  if(!q)return <div className="contestant-window"><h1>Waiting for the next question…</h1></div>;
- return <div className="contestant-window"><header><img src={playstateMark} alt=""/> <span>PLAYSTATE · CONTESTANT</span></header><div className="contestant-body"><div className="eyebrow">QUESTION {s.questionIndex+1} / {s.quiz.questions.length}</div><h1>{s.phase==="hidden"?"Get ready…":q.prompt}</h1>{s.phase!=="hidden"&&<div className="contestant-options">{q.options.map((o:any)=><button key={o.id} disabled={s.phase!=="options-visible"} className={s.selectedOptionId===o.id?"chosen":""} onClick={()=>choose(o.id)}><b>{o.label}</b>{o.text}</button>)}</div>}{s.phase==="answer-revealed"&&<h2 className="contestant-reveal">Correct answer: {q.options.find((o:any)=>o.id===q.correctOptionId)?.text}</h2>}{s.phase==="answer-locked"&&<h2>Answer locked. Waiting for Computerji…</h2>}</div><footer>YOUR ANSWER IS SENT TO COMPUTERJI</footer></div>;
+ const remaining=s.timer.status==="running"&&s.timer.startedAt!==null&&s.timer.remainingMs!==null?Math.max(0,s.timer.remainingMs-(now-s.timer.startedAt)):s.timer.remainingMs;
+ const seconds=remaining===null?null:Math.ceil(remaining/1000);
+ const locked=s.phase==="answer-locked"||s.phase==="answer-revealed"||s.phase==="answer-locked"||s.timer.status==="expired";
+ return <div className="contestant-window"><header><img src={playstateMark} alt=""/> <span>PLAYSTATE · CONTESTANT</span></header><div className="contestant-body">
+ <div className="contestant-meta"><div className="eyebrow">QUESTION {s.questionIndex+1} / {s.quiz.questions.length}</div>{seconds!==null&&<div className={`contestant-clock ${seconds<=10?"urgent":""}`}><Clock3 size={18}/>{String(Math.floor(seconds/60)).padStart(2,"0")}:{String(seconds%60).padStart(2,"0")}</div>}{seconds===null&&s.timer.status==="disabled"&&<span className="eyebrow">UNTIMED QUESTION</span>}</div>
+ <h1>{s.phase==="hidden"?"Get ready…":q.prompt}</h1>
+ {s.phase!=="hidden"&&<div className="contestant-options">{q.options.map((o:any)=><button key={o.id} disabled={s.phase!=="options-visible"||Boolean(s.selectedOptionId)} className={s.selectedOptionId===o.id?"chosen":""} onClick={()=>choose(o.id)}><b>{o.label}</b>{o.text}</button>)}</div>}
+ {s.phase==="answer-locked"&&<h2 className="contestant-reveal">Answer locked. Waiting for Computerji to reveal…</h2>}
+ {s.phase==="answer-revealed"&&<div className="contestant-reveal"><h2>{s.outcome==="in-progress"||s.outcome==="won"?"Correct answer!":"Answer revealed"}</h2><strong>{q.options.find((o:any)=>o.id===q.correctOptionId)?.text}</strong></div>}
+ </div><footer>{locked?"ANSWER LOCKED · COMPUTERJI WILL REVEAL THE RESULT":"SELECT AN ANSWER TO LOCK IT IN"}</footer></div>;
 }
 
 function PageHeading({eyebrow,title,subtitle,action}:{eyebrow:string;title:string;subtitle:string;action?:ReactNode}) { return <div className="page-heading"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{subtitle}</p></div>{action}</div>; }
