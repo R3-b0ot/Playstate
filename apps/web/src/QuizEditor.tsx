@@ -3,7 +3,7 @@ import { createSession, nextQuestion, revealAnswer, revealOptions, selectAnswer,
 import { AnswerOption, Button, Card, EmptyState, Status, TextAreaField } from "@playstate/ui";
 import { ArrowLeft, Plus, Play, Save, Trash2 } from "lucide-react";
 
-const makeQuestion = (n: number): QuizQuestion => ({ id: `question-${n}`, prompt: "", options: ["A","B","C","D"].map(id => ({ id, label:id, text:"" })), correctOptionId:"A" });
+const makeQuestion = (n: number): QuizQuestion => ({ id: `question-${Date.now()}-${n}`, prompt: "", options: ["A","B","C","D"].map(id => ({ id, label:id, text:"" })), correctOptionId:"A" });
 
 export default function QuizEditor({ title, onBack, onNotice }: { title: string; onBack: () => void; onNotice: (message: string) => void }) {
   const [questions,setQuestions] = useState<QuizQuestion[]>([]);
