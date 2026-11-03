@@ -4,8 +4,9 @@ import playstateWordmark from "../../../assets/brand/playstate-wordmark-neon.svg
 import playstateMark from "../../../assets/brand/playstate-mark-neon.svg";
 import { Activity, Archive, ArrowDownRight, ArrowRight, Bell, BookOpen, ChevronDown, CircleHelp, Clock3, Command, FilePlus2, FolderOpen, Gamepad2, Gauge, LayoutDashboard, Plus, Search, Settings2, Sparkles, Trophy, Upload, Users, WifiOff } from "lucide-react";
 import { Button, Card, Status } from "@playstate/ui";
+import QuizEditor from "./QuizEditor";
 
-type Page = "Overview" | "Quiz library" | "Results & history" | "Settings";
+type Page = "Overview" | "Quiz library" | "Results & history" | "Settings" | "Quiz editor";
 type Quiz = { id: number; title: string; category: string; questions: number; updated: string; status: "Ready" | "Draft" };
 
 const initialQuizzes: Quiz[] = [];
@@ -24,13 +25,14 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [notice, setNotice] = useState("");
+  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");
   const filtered = useMemo(() => quizzes.filter(q => (q.title + q.category).toLowerCase().includes(query.toLowerCase())), [quizzes, query]);
 
   function createQuiz() {
     const title = newTitle.trim();
     if (!title) return;
     setQuizzes(current => [{ id: Date.now(), title, category: "Uncategorised", questions: 0, updated: "Just now", status: "Draft" }, ...current]);
-    setNewTitle(""); setShowCreate(false); setPage("Quiz library"); setNotice(`“${title}” created as a draft.`);
+    setNewTitle(""); setShowCreate(false); setActiveQuiz(title); setPage("Quiz editor"); setNotice(`“${title}” created as a local draft.`);
   }
 
   return <div className="app-shell">
@@ -54,6 +56,7 @@ export default function App() {
         {page === "Overview" && <Overview quizzes={quizzes} onCreate={() => setShowCreate(true)} onBrowse={() => setPage("Quiz library")} onOpen={() => setPage("Quiz library")}/>}
         {page === "Quiz library" && <section><PageHeading eyebrow="YOUR CONTENT" title="Quiz library" subtitle="Build your next great quiz. Your content stays on this device." action={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={17}/> Create quiz</Button>}/><div className="library-toolbar"><label className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search quizzes..." aria-label="Search quizzes"/></label><span className="muted-text">{filtered.length} quizzes</span></div><div className="quiz-list">{filtered.map(q=><QuizRow key={q.id} quiz={q} onClick={()=>setNotice(`“${q.title}” is ready to open in the quiz editor. Editor is the next build milestone.`)}/>)}</div>{filtered.length===0&&<EmptyState title="No quizzes found" detail="Try another search or create a new quiz." onCreate={()=>setShowCreate(true)}/>}</section>}
         {page === "Results & history" && <section><PageHeading eyebrow="SESSION RECORDS" title="Results & history" subtitle="Your completed quiz sessions will be collected here."/><EmptyState title="No sessions yet" detail="Once you host a quiz, its session summary will appear here." onCreate={()=>setPage("Quiz library")}/></section>}
+        {page === "Quiz editor" && <QuizEditor title={activeQuiz} onBack={() => setPage("Quiz library")} onNotice={setNotice}/>}
         {page === "Settings" && <section><PageHeading eyebrow="PREFERENCES" title="Settings" subtitle="Manage your local Playstate experience."/><Card className="settings-card"><div><strong>Appearance</strong><p>Playstate dark cinematic theme</p></div><Status tone="good">Active</Status><div className="settings-divider"/><div><strong>Storage</strong><p>Local-first workspace · No account connected</p></div><Status>On this device</Status><div className="settings-divider"/><div><strong>Application</strong><p>Playstate Preview · Version 0.1.0</p></div><Status tone="live">Preview</Status></Card></section>}
       </div>
       <footer className="app-footer"><span>PLAYSTATE <i>•</i> KNOWLEDGE. COMPETITION. GAME ON.</span><span>PREVIEW BUILD 0.1.0</span></footer>
