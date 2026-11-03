@@ -39,10 +39,10 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
   useEffect(() => {
     if (mode !== "duo") return;
     const key = `playstate:live:${audienceToken}`;
-    const message = JSON.stringify({ session, quizTitle: quiz.title, selectedLifelines, usedLifelines, hiddenOptions, hint });
+    const message = JSON.stringify({ session, quizTitle: quiz.title, selectedLifelines, usedLifelines, hiddenOptions, shuffledOptions, hint });
     try { localStorage.setItem(key, message); } catch { /* popup may still use BroadcastChannel */ }
     const channel = new BroadcastChannel(`playstate:${audienceToken}`);
-    channel.postMessage({ type: "session", payload: { session, quizTitle: quiz.title, selectedLifelines, usedLifelines, hiddenOptions, hint } });
+    channel.postMessage({ type: "session", payload: { session, quizTitle: quiz.title, selectedLifelines, usedLifelines, hiddenOptions, shuffledOptions, hint } });
     channel.close();
   }, [mode, audienceToken, session, quiz.title, selectedLifelines, usedLifelines, hiddenOptions, hint]);
 
@@ -77,7 +77,7 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     };
     window.addEventListener("storage", storageReceive);
     return () => { channel.close(); window.removeEventListener("storage", storageReceive); };
-  }, [mode, audienceToken]);
+  }, [mode, audienceToken, session, selectedLifelines, usedLifelines, hiddenOptions, question]);
 
   useEffect(() => {
     if (!timerRunning) return;
