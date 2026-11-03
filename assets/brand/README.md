@@ -17,4 +17,4 @@ The wordmark SVG currently uses a system font fallback. For final brand artwork,
 
 ## Status
 
-These are editable first-pass vector assets. The symbol geometry and wordmark proportions require visual review before being treated as final trademark artwork. Check trademark and domain availability before launch.
+These are the approved canonical logo assets. Use them directly throughout the repository, application UI, documentation and product materials. Do not redraw, distort, crop, recolour outside the approved palette, or create competing variants.
