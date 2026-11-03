@@ -111,3 +111,5 @@ export function endSession(state: SessionState, now = Date.now()): EngineResult 
   active(state);
   return result({ ...state, status: "completed", outcome: "ended-by-host" }, "SessionEnded", now);
 }
+
+export * from "./quiz-file";
