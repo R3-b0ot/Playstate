@@ -74,7 +74,7 @@ export function lockAnswer(state: SessionState, now = Date.now()): EngineResult 
 }
 export function expireTimer(state: SessionState, now = Date.now()): EngineResult {
   active(state); if (state.timer.status !== "running" || state.timer.durationMs === null) throw new EngineError("TIMER_NOT_RUNNING", "No timed countdown is running.");
-  return result({ ...state, phase: "answer-locked", timer: { ...state.timer, status: "expired", remainingMs: 0, startedAt: null }, outcome: state.selectedOptionId ? state.outcome : "timed-out" }, "TimerExpired", now, state.selectedOptionId ?? "unanswered");
+  return result({ ...state, phase: "answer-locked", timer: { ...state.timer, status: "expired", remainingMs: 0, startedAt: null }, outcome: state.outcome }, "TimerExpired", now, state.selectedOptionId ?? "unanswered");
 }
 export function revealAnswer(state: SessionState, now = Date.now()): EngineResult {
   active(state); if (state.phase !== "answer-locked") throw new EngineError("INVALID_STATE", "Lock the answer before revealing it.");
