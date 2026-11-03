@@ -29,7 +29,9 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [notice, setNotice] = useState("");
-  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");\n  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);\n  const updateQuiz = useCallback((updated: QuizDefinition) => setQuizFiles(current => current.map(item => item.id === updated.id ? updated : item)), []);
+  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");
+  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
+  const updateQuiz = useCallback((updated: QuizDefinition) => setQuizFiles(current => current.map(item => item.id === updated.id ? updated : item)), []);
   const [importedQuiz, setImportedQuiz] = useState<QuizDefinition | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const filtered = useMemo(() => quizzes.filter(q => (q.title + q.category).toLowerCase().includes(query.toLowerCase())), [quizzes, query]);
@@ -37,8 +39,15 @@ export default function App() {
   function createQuiz() {
     const title = newTitle.trim();
     if (!title) return;
-    setQuizzes(current => [{ id: Date.now(), title, category: "Uncategorised", questions: 0, updated: "Just now", status: "Draft" }, ...current]);
-    setNewTitle(""); setShowCreate(false); setActiveQuiz(title); setImportedQuiz(null); setPage("Quiz editor"); setNotice(`“${title}” created as a local draft.`);
+    const draft: QuizDefinition = { id: newId(), title, questions: [] };
+    setQuizFiles(current => [draft, ...current]);
+    setNewTitle("");
+    setShowCreate(false);
+    setActiveQuiz(title);
+    setActiveQuizId(draft.id);
+    setImportedQuiz(draft);
+    setPage("Quiz editor");
+    setNotice(`“${title}” created in your local quiz library.`);
   }
 
   function importQuizFile(file?: File) {
