@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import playstateWordmark from "../../../assets/brand/playstate-wordmark-neon.svg";
+import playstateMark from "../../../assets/brand/playstate-mark-neon.svg";
 import { Activity, Archive, ArrowDownRight, ArrowRight, Bell, BookOpen, ChevronDown, CircleHelp, Clock3, Command, FilePlus2, FolderOpen, Gamepad2, Gauge, LayoutDashboard, Plus, Search, Settings2, Sparkles, Trophy, Upload, Users, WifiOff } from "lucide-react";
 import { Button, Card, Status } from "@playstate/ui";
 
@@ -38,7 +40,7 @@ export default function App() {
   return <div className="app-shell">
     <aside className="sidebar">
       <button className="brand-lockup" onClick={() => setPage("Overview")} aria-label="Playstate home">
-        <img src="/Playstate/assets/brand/playstate-wordmark-neon.svg" alt="Playstate — home" />
+        <img src={playstateWordmark} alt="Playstate — home" />
       </button>
       <div className="workspace-switch"><div className="workspace-avatar">P</div><div><strong>My workspace</strong><small>Local library</small></div><ChevronDown size={15}/></div>
       <div className="nav-label">WORKSPACE</div>
@@ -69,7 +71,7 @@ function PageHeading({eyebrow,title,subtitle,action}:{eyebrow:string;title:strin
 
 function Overview({quizzes,onCreate,onBrowse,onOpen}:{quizzes:Quiz[];onCreate:()=>void;onBrowse:()=>void;onOpen:()=>void}) {
  return <section>
-  <div className="hero-panel"><div className="hero-grid"/><div className="hero-copy"><div className="eyebrow"><Sparkles size={13}/> YOUR NEXT GAME STARTS HERE</div><h1>Make every<br/><span>question count.</span></h1><p>Create a quiz, bring everyone together, and put knowledge in the spotlight.</p><div className="hero-actions"><Button variant="primary" onClick={onCreate}><Plus size={17}/> Create a quiz</Button><Button variant="secondary" onClick={onBrowse}><FolderOpen size={17}/> Browse library</Button></div></div><div className="hero-art" aria-hidden="true"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="hero-mark"><img src="/Playstate/assets/brand/playstate-mark-neon.svg" alt=""/></div><div className="hero-number">01<span> / PLAY</span></div><div className="hero-side-label">KNOWLEDGE IS YOUR ADVANTAGE</div></div><div className="hero-index">PLAYSTATE <span>— 001</span></div></div>
+  <div className="hero-panel"><div className="hero-grid"/><div className="hero-copy"><div className="eyebrow"><Sparkles size={13}/> YOUR NEXT GAME STARTS HERE</div><h1>Make every<br/><span>question count.</span></h1><p>Create a quiz, bring everyone together, and put knowledge in the spotlight.</p><div className="hero-actions"><Button variant="primary" onClick={onCreate}><Plus size={17}/> Create a quiz</Button><Button variant="secondary" onClick={onBrowse}><FolderOpen size={17}/> Browse library</Button></div></div><div className="hero-art" aria-hidden="true"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="hero-mark"><img src={playstateMark} alt=""/></div><div className="hero-number">01<span> / PLAY</span></div><div className="hero-side-label">KNOWLEDGE IS YOUR ADVANTAGE</div></div><div className="hero-index">PLAYSTATE <span>— 001</span></div></div>
   <div className="section-title"><div><span className="eyebrow">AT A GLANCE</span><h2>Your workspace</h2></div><span className="muted-text">Stored locally on this device</span></div>
   <div className="stats-grid"><Stat icon={BookOpen} label="Total quizzes" value={String(quizzes.length).padStart(2,"0")} detail="In your library" accent="cyan"/><Stat icon={Activity} label="Ready to play" value={String(quizzes.filter(q=>q.status==="Ready").length).padStart(2,"0")} detail="Validated quizzes" accent="lime"/><Stat icon={Clock3} label="Sessions hosted" value="00" detail="No sessions recorded" accent="pink"/></div>
   <div className="lower-grid"><Card className="recent-card"><div className="card-heading"><div><span className="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h3>Recent quizzes</h3></div><Button variant="quiet" onClick={onBrowse}>View library <ArrowRight size={15}/></Button></div><div className="recent-list">{quizzes.slice(0,3).map(q=><QuizRow key={q.id} quiz={q} onClick={onOpen}/>)}</div></Card><Card className="quick-card"><div className="quick-orb"><Command size={22}/></div><span className="eyebrow">READY WHEN YOU ARE</span><h3>Bring the room<br/>to life.</h3><p>Your quiz. Your audience. Your moment. Start by building a question set.</p><Button variant="secondary" onClick={onCreate}>Build your first quiz <ArrowDownRight size={16}/></Button><div className="quick-lines"/></Card></div>
