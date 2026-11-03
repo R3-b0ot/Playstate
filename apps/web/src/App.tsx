@@ -24,7 +24,7 @@ const nav: { label: Page; icon: typeof LayoutDashboard }[] = [
 
 export default function App() {
   const [page, setPage] = useState<Page>("Overview");
-  const [quizFiles, setQuizFiles] = useState<QuizDefinition[]>(() => { const saved = readLibrary(); return saved.length ? saved : [DEMO_QUIZ]; });
+  const [quizFiles, setQuizFiles] = useState<QuizDefinition[]>(() => localStorage.getItem(LIBRARY_KEY) === null ? [DEMO_QUIZ] : readLibrary());
   const quizzes: Quiz[] = useMemo(() => quizFiles.map(q => ({ id:q.id, title:q.title, category:"Uncategorised", questions:q.questions.length, updated:"Stored locally", status:q.questions.length && q.questions.every(item => item.prompt.trim() && item.options.every(option => option.text.trim())) ? "Ready" : "Draft" })), [quizFiles]);
   useEffect(() => { try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(quizFiles)); } catch { setNotice("Local library storage is full or unavailable. Export your quiz files to keep a separate copy."); } }, [quizFiles]);
   const [query, setQuery] = useState("");
