@@ -22,29 +22,9 @@ export default function QuizEditor({ title, onBack, onNotice, initialQuiz }: { t
   const [showRun,setShowRun] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialQuiz?.questions ?? []));
   const isDirty = JSON.stringify(questions) !== savedSnapshot;
-  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialQuiz?.questions ?? []));
-  const isDirty = JSON.stringify(questions) !== savedSnapshot;
   const question = questions[selected];
   const quiz: QuizDefinition = useMemo(() => ({ id:"local-preview", title, questions }), [title,questions]);
   const errors = validateQuiz(quiz);
-  useEffect(() => {
-    try { localStorage.setItem(recoveryKey, JSON.stringify({ title, questions, recoveredAt: new Date().toISOString() })); } catch { onNotice("Browser recovery storage is unavailable. Download your quiz file to keep a copy."); }
-  }, [recoveryKey, title, questions, onNotice]);
-  useEffect(() => {
-    const warnBeforeExit = (event: BeforeUnloadEvent) => { if (!isDirty) return; event.preventDefault(); event.returnValue = ""; };
-    window.addEventListener("beforeunload", warnBeforeExit);
-    return () => window.removeEventListener("beforeunload", warnBeforeExit);
-  }, [isDirty]);
-  function saveQuizFile() {
-    try {
-      const blob = new Blob([serializeQuizFile(quiz)], { type: "application/vnd.playstate.quiz+json" });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a"); anchor.href = url; anchor.download = quizFileName(title); anchor.click();
-      URL.revokeObjectURL(url);
-      setSavedSnapshot(JSON.stringify(questions));
-      onNotice("Quiz file prepared. Keep the downloaded .playstate file somewhere safe.");
-    } catch (error) { onNotice(error instanceof Error ? error.message : "Unable to save this quiz file."); }
-  }
   useEffect(() => {
     try { localStorage.setItem(recoveryKey, JSON.stringify({ title, questions, recoveredAt: new Date().toISOString() })); } catch { onNotice("Browser recovery storage is unavailable. Download your quiz file to keep a copy."); }
   }, [recoveryKey, title, questions, onNotice]);
