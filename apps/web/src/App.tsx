@@ -38,8 +38,7 @@ export default function App() {
   return <div className="app-shell">
     <aside className="sidebar">
       <button className="brand-lockup" onClick={() => setPage("Overview")} aria-label="Playstate home">
-        <img src="/Playstate/assets/brand/playstate-mark-neon.svg" alt="" />
-        <span>PLAY<span>STATE</span></span>
+        <img src="/Playstate/assets/brand/playstate-wordmark-neon.svg" alt="Playstate — home" />
       </button>
       <div className="workspace-switch"><div className="workspace-avatar">P</div><div><strong>My workspace</strong><small>Local library</small></div><ChevronDown size={15}/></div>
       <div className="nav-label">WORKSPACE</div>
