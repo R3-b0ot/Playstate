@@ -10,7 +10,7 @@ Playstate is an offline-first quiz creation and live-hosting platform.
 
 The web edition is a standalone browser app. Create and edit quizzes, keep a local library, export portable `.playstate` files, import shared quizzes as independent copies, and host a quiz with a live countdown and audience display. No account, backend, or cloud connection is required for the core experience.
 
-> **Current status:** Web demo implementation is in progress. GitHub Actions typecheck/build and GitHub Pages deployment are being enabled. Check the latest Actions run before treating the hosted demo as available.
+> **Current status:** The web app typechecks and builds in GitHub Actions. To publish it, enable GitHub Pages once in repository Settings → Pages → Build and deployment → Source → GitHub Actions. The workflow then deploys each successful push to `main`.
 
 ## Try it locally
 
@@ -21,7 +21,7 @@ pnpm install
 pnpm --filter @playstate/web dev
 ```
 
-Open the local Vite URL shown in the terminal. The first launch includes **The Playstate Challenge**, a five-question demo quiz.
+Open the local Vite URL shown in the terminal. The first launch includes **The Playstate Challenge**, a five-question demo quiz. For the hosted version, enable Pages using the setting above; deployment is handled by `.github/workflows/web-ci.yml`.
 
 ## Web demo workflow
 
