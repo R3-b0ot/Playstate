@@ -99,3 +99,8 @@ The app's Vite base path is configured for `/Playstate/`. CI confirms TypeScript
 ## Session history
 
 Completed presenter sessions now emit a local summary containing quiz title, question count, outcome and completion timestamp. The web app stores these summaries in browser local storage and displays them under Results & History. This is a local summary only; it does not yet include per-question answer analytics, participant identities, prize ladder or exportable reports.
+
+
+## Pages activation follow-up
+
+The repository owner has confirmed GitHub Pages is enabled with GitHub Actions as the deployment source. A fresh push triggers a new deployment attempt against that configuration; the earlier configure-pages 404 occurred before this confirmation and is not treated as the current state.
