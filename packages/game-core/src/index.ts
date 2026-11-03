@@ -72,9 +72,24 @@ export function lockAnswer(state: SessionState, now = Date.now()): EngineResult 
   if (state.timer.status === "running") throw new EngineError("INVALID_STATE", "Pause or expire the timer before manually locking.");
   return result({ ...state, phase: "answer-locked", timer: { ...state.timer, status: state.timer.status === "disabled" ? "disabled" : state.timer.status } }, "AnswerLocked", now, state.selectedOptionId ?? "unanswered");
 }
+export function pauseTimer(state: SessionState, now = Date.now()): EngineResult {
+  active(state);
+  if (state.timer.status !== "running" || state.timer.startedAt === null || state.timer.remainingMs === null) throw new EngineError("TIMER_NOT_RUNNING", "No timed countdown is running.");
+  const elapsed = Math.max(0, now - state.timer.startedAt);
+  const remainingMs = Math.max(0, state.timer.remainingMs - elapsed);
+  if (remainingMs === 0) throw new EngineError("INVALID_STATE", "The timer has expired; process the expiry instead.");
+  return result({ ...state, timer: { ...state.timer, status: "paused", remainingMs, startedAt: null } }, "TimerPaused", now);
+}
+export function resumeTimer(state: SessionState, now = Date.now()): EngineResult {
+  active(state);
+  if (state.timer.status !== "paused" || state.timer.remainingMs === null || state.timer.remainingMs <= 0) throw new EngineError("INVALID_STATE", "Only a paused timer with time remaining can resume.");
+  return result({ ...state, timer: { ...state.timer, status: "running", startedAt: now } }, "TimerResumed", now);
+}
 export function expireTimer(state: SessionState, now = Date.now()): EngineResult {
-  active(state); if (state.timer.status !== "running" || state.timer.durationMs === null) throw new EngineError("TIMER_NOT_RUNNING", "No timed countdown is running.");
-  return result({ ...state, phase: "answer-locked", timer: { ...state.timer, status: "expired", remainingMs: 0, startedAt: null }, outcome: state.outcome }, "TimerExpired", now, state.selectedOptionId ?? "unanswered");
+  active(state);
+  if (state.timer.status !== "running" || state.timer.startedAt === null || state.timer.remainingMs === null || state.timer.durationMs === null) throw new EngineError("TIMER_NOT_RUNNING", "No timed countdown is running.");
+  if (now - state.timer.startedAt < state.timer.remainingMs) throw new EngineError("INVALID_STATE", "The countdown has not reached zero.");
+  return { state: { ...state, phase: "answer-locked", timer: { ...state.timer, status: "expired", remainingMs: 0, startedAt: null } }, events: [{ type: "TimerExpired", at: now }, { type: "AnswerLocked", at: now, detail: state.selectedOptionId ?? "unanswered" }] };
 }
 export function revealAnswer(state: SessionState, now = Date.now()): EngineResult {
   active(state); if (state.phase !== "answer-locked") throw new EngineError("INVALID_STATE", "Lock the answer before revealing it.");
