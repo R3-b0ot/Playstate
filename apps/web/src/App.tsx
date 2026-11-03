@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import playstateWordmark from "../../../assets/brand/playstate-wordmark-neon.svg";
 import playstateMark from "../../../assets/brand/playstate-mark-neon.svg";
 import { Activity, Archive, ArrowDownRight, ArrowRight, Bell, BookOpen, ChevronDown, CircleHelp, Clock3, Command, FilePlus2, FolderOpen, Gamepad2, Gauge, LayoutDashboard, Plus, Search, Settings2, Sparkles, Trophy, Upload, Users, WifiOff } from "lucide-react";
 import { Button, Card, Status, Toast } from "@playstate/ui";
-import QuizEditor from "./QuizEditor";
+import QuizEditor from "./QuizEditor";\nimport { parseQuizFile, type QuizDefinition } from "@playstate/game-core";
 
 type Page = "Overview" | "Quiz library" | "Results & history" | "Settings" | "Quiz editor";
 type Quiz = { id: number; title: string; category: string; questions: number; updated: string; status: "Ready" | "Draft" };
@@ -25,17 +25,17 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [notice, setNotice] = useState("");
-  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");
+  const [activeQuiz, setActiveQuiz] = useState("Untitled quiz");\n  const [importedQuiz, setImportedQuiz] = useState<QuizDefinition | null>(null);\n  const importInput = useRef<HTMLInputElement>(null);
   const filtered = useMemo(() => quizzes.filter(q => (q.title + q.category).toLowerCase().includes(query.toLowerCase())), [quizzes, query]);
 
   function createQuiz() {
     const title = newTitle.trim();
     if (!title) return;
     setQuizzes(current => [{ id: Date.now(), title, category: "Uncategorised", questions: 0, updated: "Just now", status: "Draft" }, ...current]);
-    setNewTitle(""); setShowCreate(false); setActiveQuiz(title); setPage("Quiz editor"); setNotice(`“${title}” created as a local draft.`);
+    setNewTitle(""); setShowCreate(false); setActiveQuiz(title); setImportedQuiz(null); setPage("Quiz editor"); setNotice(`“${title}” created as a local draft.`);
   }
 
-  return <div className="app-shell">
+  function importQuizFile(file?: File) {\n    if (!file) return;\n    if (!file.name.toLowerCase().endsWith(".playstate")) { setNotice("Choose a Playstate .playstate quiz file."); return; }\n    const reader = new FileReader();\n    reader.onload = () => {\n      try {\n        const imported = parseQuizFile(String(reader.result ?? ""));\n        setImportedQuiz(imported); setActiveQuiz(imported.title); setPage("Quiz editor");\n        setNotice(`“${imported.title}” imported as an independent copy. The original file is unchanged.`);\n      } catch (error) { setNotice(error instanceof Error ? error.message : "Unable to import this quiz file."); }\n      if (importInput.current) importInput.current.value = "";\n    };\n    reader.onerror = () => setNotice("The selected quiz file could not be read.");\n    reader.readAsText(file);\n  }\n\n  return <div className="app-shell">
     <aside className="sidebar">
       <button className="brand-lockup" onClick={() => setPage("Overview")} aria-label="Playstate home">
         <img src={playstateWordmark} alt="Playstate — home" />
@@ -50,13 +50,13 @@ export default function App() {
     </aside>
 
     <main className="main-area">
-      <header className="topbar"><div className="breadcrumb"><span>PLAYSTATE</span><ArrowRight size={13}/><strong>{page}</strong></div><div className="top-actions"><Status tone="good">All changes saved</Status><button className="icon-btn" aria-label="Notifications"><Bell size={17}/></button><div className="top-avatar">R</div></div></header>
+      <header className="topbar"><div className="breadcrumb"><span>PLAYSTATE</span><ArrowRight size={13}/><strong>{page}</strong></div><div className="top-actions"><Button variant="secondary" onClick={()=>importInput.current?.click()}><Upload size={15}/> Import quiz</Button><input ref={importInput} type="file" accept=".playstate,application/json" hidden onChange={event=>importQuizFile(event.target.files?.[0])}/><button className="icon-btn" aria-label="Notifications"><Bell size={17}/></button><div className="top-avatar">R</div></div></header>
       <div className="page-content">
         {notice && <Toast message={notice} onDismiss={() => setNotice("")}/>}
         {page === "Overview" && <Overview quizzes={quizzes} onCreate={() => setShowCreate(true)} onBrowse={() => setPage("Quiz library")} onOpen={() => setPage("Quiz library")}/>}
         {page === "Quiz library" && <section><PageHeading eyebrow="YOUR CONTENT" title="Quiz library" subtitle="Build your next great quiz. Your content stays on this device." action={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={17}/> Create quiz</Button>}/><div className="library-toolbar"><label className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search quizzes..." aria-label="Search quizzes"/></label><span className="muted-text">{filtered.length} quizzes</span></div><div className="quiz-list">{filtered.map(q=><QuizRow key={q.id} quiz={q} onClick={()=>setNotice(`“${q.title}” is ready to open in the quiz editor. Editor is the next build milestone.`)}/>)}</div>{filtered.length===0&&<EmptyState title="No quizzes found" detail="Try another search or create a new quiz." onCreate={()=>setShowCreate(true)}/>}</section>}
         {page === "Results & history" && <section><PageHeading eyebrow="SESSION RECORDS" title="Results & history" subtitle="Your completed quiz sessions will be collected here."/><EmptyState title="No sessions yet" detail="Once you host a quiz, its session summary will appear here." onCreate={()=>setPage("Quiz library")}/></section>}
-        {page === "Quiz editor" && <QuizEditor title={activeQuiz} onBack={() => setPage("Quiz library")} onNotice={setNotice}/>}
+        {page === "Quiz editor" && <QuizEditor key={importedQuiz?.id ?? activeQuiz} title={activeQuiz} initialQuiz={importedQuiz} onBack={() => setPage("Quiz library")} onNotice={setNotice}/>}
         {page === "Settings" && <section><PageHeading eyebrow="PREFERENCES" title="Settings" subtitle="Manage your local Playstate experience."/><Card className="settings-card"><div><strong>Appearance</strong><p>Playstate dark cinematic theme</p></div><Status tone="good">Active</Status><div className="settings-divider"/><div><strong>Storage</strong><p>Local-first workspace · No account connected</p></div><Status>On this device</Status><div className="settings-divider"/><div><strong>Application</strong><p>Playstate Preview · Version 0.1.0</p></div><Status tone="live">Preview</Status></Card></section>}
       </div>
       <footer className="app-footer"><span>PLAYSTATE <i>•</i> KNOWLEDGE. COMPETITION. GAME ON.</span><span>PREVIEW BUILD 0.1.0</span></footer>
