@@ -4,11 +4,49 @@
   <img src="assets/brand/playstate-wordmark-neon.svg" alt="PLAYSTATE — Knowledge. Competition. Game on." width="520" />
 </p>
 
-Playstate is an offline-first live quiz platform for hosted competitions, classrooms, institutions, and corporate events.
+Playstate is an offline-first quiz creation and live-hosting platform.
 
-The first release is quiz-only. The web edition is a standalone, offline-capable quiz authoring and play experience built around portable `.playstate` files. A Windows desktop edition is planned separately.
+**Create the quiz. Run the show. Own the moment.**
 
-> **Status:** Foundation and architecture planning. The original KBE prototype is being audited; feature parity is not yet verified.
+The web edition is a standalone browser app. Create and edit quizzes, keep a local library, export portable `.playstate` files, import shared quizzes as independent copies, and host a quiz with a live countdown and audience display. No account, backend, or cloud connection is required for the core experience.
+
+> **Current status:** Web demo implementation is in progress. GitHub Actions typecheck/build and GitHub Pages deployment are being enabled. Check the latest Actions run before treating the hosted demo as available.
+
+## Try it locally
+
+Requirements: Node.js 24 and pnpm 10.
+
+```bash
+pnpm install
+pnpm --filter @playstate/web dev
+```
+
+Open the local Vite URL shown in the terminal. The first launch includes **The Playstate Challenge**, a five-question demo quiz.
+
+## Web demo workflow
+
+1. Open the Quiz Library and try **The Playstate Challenge**.
+2. Select the green play control on a quiz row to host it.
+3. Start the show, reveal options, start the countdown, lock an answer, and reveal the correct answer.
+4. Switch to Audience view for a clean display, or use Fullscreen for presentation.
+5. Create your own quiz, edit its questions, and use **Save .playstate** to export a portable file.
+6. Import a `.playstate` file to create a separate editable copy.
+
+### Timer policy
+
+- Questions 1–4: 60 seconds each.
+- Questions 5–9: 120 seconds each.
+- Question 10 onwards: untimed; the host manually locks the answer.
+
+The timer locks the answer when it expires; the host still reveals the correct answer separately. An unanswered timed question ends the run after reveal.
+
+## User-owned quiz files and local storage
+
+- `.playstate` is the versioned portable quiz-file format.
+- Importing always creates a new independent quiz identity. The source file is never modified.
+- The browser library and recovery snapshots are stored locally in the current browser profile.
+- Browser storage is not cloud backup and may be cleared by browser settings. Export quiz files and keep them somewhere safe.
+- Browsers only offer a native close/reload warning; they do not permit a custom Save/Don't Save dialog during tab closure.
 
 ## Approved brand identity
 
@@ -30,34 +68,26 @@ These are the approved canonical assets. All future Playstate files and interfac
 
 | Edition | Purpose | Runtime |
 |---|---|---|
-| Web showcase | Instantly playable sample quiz | Static site; GitHub Pages |
-| Desktop | Full quiz authoring and live event operation | Tauri 2 + local SQLite |
+| Web | Create, import, export, manage and host quizzes | React + TypeScript + Vite; browser local storage |
+| Desktop (planned) | Native Windows quiz authoring and live event operation | Tauri 2 + local SQLite |
 
 ## Principles
 
-- Offline first: desktop core workflows work without internet access.
-- One game engine: quiz rules live in a shared TypeScript package.
-- Presenter-led: host controls the session; audience display is a separate read-only view.
-- No mandatory accounts, cloud sync, or telemetry in the initial product.\n- User-owned quiz files: importing a `.playstate` file creates an independent copy; saving exports a new file.\n- Browser storage is a recovery aid, not the authoritative copy. Users keep their quiz files.
+- Offline first: core quiz workflows run locally without a backend.
+- One game engine: quiz rules live in the shared TypeScript package.
+- Presenter-led: host controls the session; audience mode is a read-only projection.
+- No mandatory accounts, cloud sync, or telemetry in the initial product.
 - Preserve the original PHP/MySQL KBE project as a separate historical reference.
-- Target WCAG 2.2 AA: keyboard operation, visible focus, contrast, and reduced motion.
-
-## Planned stack
-
-TypeScript + pnpm workspaces, React + Vite, Zustand for UI state, Zod for validation, Tauri 2, SQLite, Vitest, and Playwright. These are planned choices and may be revised if the legacy audit reveals constraints.
+- Target WCAG 2.2 AA: keyboard operation, visible focus, contrast, and reduced motion. This is a target, not a claim of verified compliance.
 
 ## Planned structure
 
-- apps/web — GitHub Pages browser app
-- apps/desktop — Tauri desktop application
-- packages/game-core — framework-independent quiz engine
-- packages/data-models — shared types and validation
-- packages/ui — shared interface components and approved design tokens
-- data — curated demo content
-- database/migrations — SQLite migrations
-- docs — product, architecture, audit, brand and roadmap
-- assets/brand — approved vector identity assets
-- legacy — archived KBE source, after audit/import
+- `apps/web` — GitHub Pages browser app
+- `apps/desktop` — planned Tauri desktop application
+- `packages/game-core` — framework-independent quiz engine and portable file format
+- `packages/ui` — shared interface components and approved design tokens
+- `docs` — product, architecture, audit, brand and roadmap
+- `assets/brand` — approved vector identity assets
 
 ## Project history
 
