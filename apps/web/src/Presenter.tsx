@@ -24,8 +24,7 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     { id: "clock-freeze", name: "Clock Freeze", detail: "Pause the countdown; Computerji can resume it.", icon: "Ⅱ" },
     { id: "computerji-hint", name: "Computerji Hint", detail: "Reveal the explanation supplied with this question.", icon: "?" },
     { id: "shuffle", name: "Option Shuffle", detail: "Reorder the answer options.", icon: "↝" },
-    { id: "double-chance", name: "Double Chance", detail: "Reserve one retry after an incorrect answer.", icon: "×2" },
-    { id: "skip", name: "Skip Question", detail: "Move past this question without answering.", icon: "»" }
+    { id: "computerji-hint", name: "Computerji Hint", detail: "Reveal the explanation supplied with this question.", icon: "?" }
   ];
   const [audienceToken] = useState(() => crypto.randomUUID());
   const [contestantWindow, setContestantWindow] = useState<Window | null>(null);
@@ -138,11 +137,6 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     } else if (id === "shuffle") {
       setHiddenOptions(current => current);
       setShuffledOptions(question.options.map(option => option.id).sort(() => Math.random() - 0.5));
-    } else if (id === "double-chance") {
-      setDoubleChance(true);
-    } else if (id === "skip") {
-      if (session.questionIndex >= quiz.questions.length - 1) return;
-      setSession(current => ({ ...current, phase: "answer-revealed", selectedOptionId: null, revealedCorrectOptionId: null, timer: { ...current.timer, status: current.timer.status === "disabled" ? "disabled" : "paused", startedAt: null } }));
     }
     setUsedLifelines(current => [...current, id]);
     playTone(880, 0.18);
@@ -176,11 +170,11 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
       {session.phase === "answer-revealed" && <Card className="presenter-feedback"><Status tone={correct ? "good" : "danger"}>{correct ? "CORRECT ANSWER" : session.outcome === "timed-out" ? "TIME IS UP" : "INCORRECT ANSWER"}</Status><h2>{question.options.find(option=>option.id===question.correctOptionId)?.text}</h2>{question.explanation && <p>{question.explanation}</p>}</Card>}
       {!audience && <Card className="presenter-controls"><div className="presenter-control-label"><span className="eyebrow">HOST CONTROLS</span><strong>{finished ? "Session complete" : "Manage the show"}</strong></div><div className="presenter-control-actions">
         {session.phase==="hidden" && <Button variant="primary" onClick={()=>mode==="duo" ? shareQuestion() : run((state,at)=>revealOptions(state,at))}>{mode==="duo" ? "Share Question & Start Timer" : "Reveal question & options"}</Button>}
-        {mode==="solo" && session.phase==="options-visible" && ["idle","paused"].includes(session.timer.status) && session.timer.durationMs !== null && <Button variant="primary" onClick={()=>run((state,at)=>session.timer.status==="paused" ? resumeTimer(state,at) : startTimer(state,at))}><Play size={15}/> {session.timer.status==="paused" ? "Resume countdown" : "Start countdown"}</Button>}
+        {session.phase==="options-visible" && (mode==="solo" || session.timer.status==="paused") && ["idle","paused"].includes(session.timer.status) && session.timer.durationMs !== null && <Button variant="primary" onClick={()=>run((state,at)=>session.timer.status==="paused" ? resumeTimer(state,at) : startTimer(state,at))}><Play size={15}/> {session.timer.status==="paused" ? "Resume countdown" : "Start countdown"}</Button>}
         {session.phase==="options-visible" && timerRunning && <Button variant="secondary" onClick={()=>run((state,at)=>pauseTimer(state,at))}><Pause size={15}/> Pause timer</Button>}
         {session.phase==="options-visible" && mode==="solo" && <div className="lifeline-toolbar">{selectedLifelines.map(id=>{const item=lifelineCatalog.find(entry=>entry.id===id)!;return <Button key={id} variant="secondary" disabled={usedLifelines.includes(id) || (id==="computerji-hint"&&!question.explanation) || ((id==="extra-time"||id==="clock-freeze")&&session.timer.status==="disabled")} onClick={()=>handleLifeline(id)}>{item.name}{usedLifelines.includes(id)?" · USED":""}</Button>;})}<Button variant="secondary" onClick={()=>run((state,at)=>{const paused=state.timer.status==="running" ? pauseTimer(state,at).state : state;return lockAnswer(paused,at);})}>Lock answer</Button></div>}
         {session.phase==="answer-locked" && <Button variant="primary" onClick={()=>run((state,at)=>revealAnswer(state,at))}>Reveal correct answer</Button>}
-        {correct && <Button variant="primary" onClick={()=>run((state,at)=>nextQuestion(state,at))}>Next question <Play size={15}/></Button>}
+        {correct && <Button variant="primary" onClick={()=>{setHiddenOptions([]);setHint("");setShuffledOptions([]);setUsedLifelines([]);setSession(state=>nextQuestion(state).state);}}>Next question <Play size={15}/></Button>}
         {finished && <Button variant="secondary" onClick={onExit}><ArrowLeft size={15}/> Back to library</Button>}
         {!finished && <Button variant="quiet" onClick={()=>{if(window.confirm("End this quiz session?"))run((state,at)=>endSession(state,at));}}><RotateCcw size={15}/> End session</Button>}
       </div></Card>}
