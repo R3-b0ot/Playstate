@@ -59,3 +59,18 @@ The browser cannot show a custom save dialog during tab/window closure or initia
 ## Verification boundary
 
 The file-format and editor integration changes have been committed to `main`. They still require the GitHub Actions typecheck/build run and hands-on browser checks for file download, import validation, reload recovery, and close/reload warnings. The web app currently supports importing a file directly into the editor; a persistent multi-quiz library and full presenter/audience flow remain subsequent work.
+
+
+## Persistent browser quiz library
+
+The web workspace now stores the user's quiz collection in browser local storage:
+- New quizzes are created with stable independent IDs and added to the library immediately.
+- Every editor change is synchronized into the local library, so returning to the library and reopening a quiz retains its content.
+- The library survives browser reloads on the same browser profile and device.
+- Imported `.playstate` files are added as independent entries; importing the same source again produces another independent copy.
+- Library entries can be searched, opened and removed. Removing an entry does not delete any downloaded `.playstate` file.
+- A local recovery snapshot remains available as an additional safeguard.
+
+Browser local storage is device- and browser-profile-specific, can be cleared by the user/browser, and has finite quota. It is not a substitute for exporting and keeping the portable `.playstate` file. No cloud sync or account storage is introduced.
+
+Verification still requires the next GitHub Actions run and manual browser checks, including reload persistence, editing/reopening, import-as-copy, delete behaviour, quota handling, and export/import round trips.
