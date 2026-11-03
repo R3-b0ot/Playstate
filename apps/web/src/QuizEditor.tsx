@@ -3,16 +3,66 @@ import { createSession, nextQuestion, revealAnswer, revealOptions, selectAnswer,
 import { AnswerOption, Button, Card, EmptyState, Status, TextAreaField } from "@playstate/ui";
 import { ArrowLeft, Plus, Play, Save, Trash2, Download, HardDrive } from "lucide-react";
 
-const makeQuestion = (n: number): QuizQuestion => ({ id: `question-${Date.now()}-${n}`, prompt: "", options: ["A","B","C","D"].map(id => ({ id, label:id, text:"" })), correctOptionId:"A" });\n\nfunction readRecoveredQuestions(key: string, fallback: QuizQuestion[]): QuizQuestion[] {\n  try {\n    const raw = localStorage.getItem(key);\n    if (!raw) return fallback;\n    const parsed = JSON.parse(raw) as { questions?: unknown };\n    return Array.isArray(parsed.questions) ? parsed.questions as QuizQuestion[] : fallback;\n  } catch { return fallback; }\n}
+const makeQuestion = (n: number): QuizQuestion => ({ id: `question-${Date.now()}-${n}`, prompt: "", options: ["A","B","C","D"].map(id => ({ id, label:id, text:"" })), correctOptionId:"A" });
 
-export default function QuizEditor({ title, onBack, onNotice }: { title: string; onBack: () => void; onNotice: (message: string) => void }) {
-  const [questions,setQuestions] = useState<QuizQuestion[]>([]);
+function readRecoveredQuestions(key: string, fallback: QuizQuestion[]): QuizQuestion[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as { questions?: unknown };
+    return Array.isArray(parsed.questions) ? parsed.questions as QuizQuestion[] : fallback;
+  } catch { return fallback; }
+}
+
+export default function QuizEditor({ title, onBack, onNotice, initialQuiz }: { title: string; onBack: () => void; onNotice: (message: string) => void; initialQuiz?: QuizDefinition | null }) {
+  const recoveryKey = `playstate:recovery:${initialQuiz?.id ?? title}`;
+  const [questions,setQuestions] = useState<QuizQuestion[]>(() => readRecoveredQuestions(recoveryKey, initialQuiz?.questions ?? []));
   const [selected,setSelected] = useState(0);
   const [session,setSession] = useState<SessionState | null>(null);
-  const [showRun,setShowRun] = useState(false);\n  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialQuiz?.questions ?? []));\n  const isDirty = JSON.stringify(questions) !== savedSnapshot;
+  const [showRun,setShowRun] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialQuiz?.questions ?? []));
+  const isDirty = JSON.stringify(questions) !== savedSnapshot;
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialQuiz?.questions ?? []));
+  const isDirty = JSON.stringify(questions) !== savedSnapshot;
   const question = questions[selected];
   const quiz: QuizDefinition = useMemo(() => ({ id:"local-preview", title, questions }), [title,questions]);
-  const errors = validateQuiz(quiz);\n  useEffect(() => {\n    try { localStorage.setItem(recoveryKey, JSON.stringify({ title, questions, recoveredAt: new Date().toISOString() })); } catch { onNotice("Browser recovery storage is unavailable. Download your quiz file to keep a copy."); }\n  }, [recoveryKey, title, questions, onNotice]);\n  useEffect(() => {\n    const warnBeforeExit = (event: BeforeUnloadEvent) => { if (!isDirty) return; event.preventDefault(); event.returnValue = ""; };\n    window.addEventListener("beforeunload", warnBeforeExit);\n    return () => window.removeEventListener("beforeunload", warnBeforeExit);\n  }, [isDirty]);\n  function saveQuizFile() {\n    try {\n      const blob = new Blob([serializeQuizFile(quiz)], { type: "application/vnd.playstate.quiz+json" });\n      const url = URL.createObjectURL(blob);\n      const anchor = document.createElement("a"); anchor.href = url; anchor.download = quizFileName(title); anchor.click();\n      URL.revokeObjectURL(url);\n      setSavedSnapshot(JSON.stringify(questions));\n      onNotice("Quiz file prepared. Keep the downloaded .playstate file somewhere safe.");\n    } catch (error) { onNotice(error instanceof Error ? error.message : "Unable to save this quiz file."); }\n  }
+  const errors = validateQuiz(quiz);
+  useEffect(() => {
+    try { localStorage.setItem(recoveryKey, JSON.stringify({ title, questions, recoveredAt: new Date().toISOString() })); } catch { onNotice("Browser recovery storage is unavailable. Download your quiz file to keep a copy."); }
+  }, [recoveryKey, title, questions, onNotice]);
+  useEffect(() => {
+    const warnBeforeExit = (event: BeforeUnloadEvent) => { if (!isDirty) return; event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", warnBeforeExit);
+    return () => window.removeEventListener("beforeunload", warnBeforeExit);
+  }, [isDirty]);
+  function saveQuizFile() {
+    try {
+      const blob = new Blob([serializeQuizFile(quiz)], { type: "application/vnd.playstate.quiz+json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = quizFileName(title); anchor.click();
+      URL.revokeObjectURL(url);
+      setSavedSnapshot(JSON.stringify(questions));
+      onNotice("Quiz file prepared. Keep the downloaded .playstate file somewhere safe.");
+    } catch (error) { onNotice(error instanceof Error ? error.message : "Unable to save this quiz file."); }
+  }
+  useEffect(() => {
+    try { localStorage.setItem(recoveryKey, JSON.stringify({ title, questions, recoveredAt: new Date().toISOString() })); } catch { onNotice("Browser recovery storage is unavailable. Download your quiz file to keep a copy."); }
+  }, [recoveryKey, title, questions, onNotice]);
+  useEffect(() => {
+    const warnBeforeExit = (event: BeforeUnloadEvent) => { if (!isDirty) return; event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", warnBeforeExit);
+    return () => window.removeEventListener("beforeunload", warnBeforeExit);
+  }, [isDirty]);
+  function saveQuizFile() {
+    try {
+      const blob = new Blob([serializeQuizFile(quiz)], { type: "application/vnd.playstate.quiz+json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = quizFileName(title); anchor.click();
+      URL.revokeObjectURL(url);
+      setSavedSnapshot(JSON.stringify(questions));
+      onNotice("Quiz file prepared. Keep the downloaded .playstate file somewhere safe.");
+    } catch (error) { onNotice(error instanceof Error ? error.message : "Unable to save this quiz file."); }
+  }
   function updateQuestion(patch: Partial<QuizQuestion>) {
     setQuestions(items => items.map((item,index) => index === selected ? { ...item, ...patch } : item));
   }
