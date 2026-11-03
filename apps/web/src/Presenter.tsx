@@ -25,6 +25,42 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     : session.timer.remainingMs, [session.timer, now]);
 
   useEffect(() => {
+    if (mode !== "duo") return;
+    const key = `playstate:live:${audienceToken}`;
+    const message = JSON.stringify({ session, quizTitle: quiz.title });
+    try { localStorage.setItem(key, message); } catch { /* popup may still use BroadcastChannel */ }
+    const channel = new BroadcastChannel(`playstate:${audienceToken}`);
+    channel.postMessage({ type: "session", payload: { session, quizTitle: quiz.title } });
+    channel.close();
+  }, [mode, audienceToken, session, quiz.title]);
+
+  useEffect(() => {
+    if (mode !== "duo") return;
+    const channel = new BroadcastChannel(`playstate:${audienceToken}`);
+    const receive = (event: MessageEvent) => {
+      if (event.data?.type !== "answer" || typeof event.data.optionId !== "string") return;
+      setSession(current => {
+        if (current.phase !== "options-visible") return current;
+        try { return selectAnswer(current, event.data.optionId).state; } catch { return current; }
+      });
+    };
+    channel.addEventListener("message", receive);
+    const key = `playstate:answer:${audienceToken}`;
+    const storageReceive = (event: StorageEvent) => {
+      if (event.key !== key || !event.newValue) return;
+      try {
+        const message = JSON.parse(event.newValue);
+        if (typeof message.optionId === "string") setSession(current => {
+          if (current.phase !== "options-visible") return current;
+          try { return selectAnswer(current, message.optionId).state; } catch { return current; }
+        });
+      } catch { /* ignore malformed cross-window messages */ }
+    };
+    window.addEventListener("storage", storageReceive);
+    return () => { channel.close(); window.removeEventListener("storage", storageReceive); };
+  }, [mode, audienceToken]);
+
+  useEffect(() => {
     if (!timerRunning) return;
     const id = window.setInterval(() => {
       const tick = Date.now();
@@ -47,7 +83,8 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     }
   }, [session.status, session.outcome, quiz, onComplete]);
 
-  function begin() { setShowIntro(false); if (mode === "duo") { const popup = window.open(`${window.location.pathname}?audience=${audienceToken}`, "playstate-contestant", "popup,width=1100,height=780"); if (popup) setContestantWindow(popup); } }
+  function contestantUrl() { const url = new URL(window.location.href); url.searchParams.set("audience", audienceToken); return url.toString(); }
+  function begin() { setShowIntro(false); if (mode === "duo") { const popup = window.open(contestantUrl(), "playstate-contestant", "popup,width=1100,height=780"); if (popup) setContestantWindow(popup); } }
   function playTone(frequency=620, duration=0.08) { if (!soundOn) return; try { const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext; const context = new AudioContextClass(); const oscillator = context.createOscillator(); const gain = context.createGain(); oscillator.type = "sine"; oscillator.frequency.value = frequency; gain.gain.setValueAtTime(0.0001, context.currentTime); gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration); oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + duration); oscillator.onended = () => context.close(); } catch { /* audio is optional */ } }
   function useFiftyFifty() { if (lifelines.fifty || session.phase !== "options-visible") return; const wrong = question.options.filter(o => o.id !== question.correctOptionId); setHiddenOptions(wrong.slice(0,2).map(o=>o.id)); setLifelines(v=>({...v,fifty:true})); playTone(880,0.18); }
   function toggleFullscreen() {
@@ -62,7 +99,7 @@ export default function Presenter({ quiz, mode = "solo", onExit, onComplete }: {
     <header className="presenter-toolbar">
       <button className="presenter-back" onClick={onExit}><ArrowLeft size={16}/> Exit session</button>
       <div className="presenter-brand">PLAYSTATE <span>{mode === "duo" ? "COMPUTERJI DESK" : "SOLO CHALLENGE"}</span></div>
-      <div className="presenter-toolbar-actions"><Button variant="secondary" onClick={()=>setSoundOn(v=>!v)}>{soundOn ? "Sound on" : "Sound off"}</Button>{mode === "duo" && <Button variant="secondary" onClick={()=>{const w=window.open(`${window.location.pathname}?audience=${audienceToken}`,"playstate-contestant","popup,width=1100,height=780");if(w)setContestantWindow(w);}}>{contestantWindow && !contestantWindow.closed ? "Reopen contestant" : "Open contestant"}</Button>}<Button variant="secondary" onClick={toggleFullscreen}><Maximize2 size={15}/> Fullscreen</Button></div>
+      <div className="presenter-toolbar-actions"><Button variant="secondary" onClick={()=>setSoundOn(v=>!v)}>{soundOn ? "Sound on" : "Sound off"}</Button>{mode === "duo" && <Button variant="secondary" onClick={()=>{const w=window.open(contestantUrl(),"playstate-contestant","popup,width=1100,height=780");if(w)setContestantWindow(w);}}>{contestantWindow && !contestantWindow.closed ? "Reopen contestant" : "Open contestant"}</Button>}<Button variant="secondary" onClick={toggleFullscreen}><Maximize2 size={15}/> Fullscreen</Button></div>
     </header>
     {showIntro ? <main className="presenter-stage presenter-intro"><span className="eyebrow">READY TO HOST</span><h1>{quiz.title}</h1><p>{quiz.questions.length} questions · Timer policy: 60 sec (1–4), 120 sec (5–9), untimed (10+)</p><Button variant="primary" onClick={begin}><Play size={16}/> Start show</Button></main> :
     <main className="presenter-stage">
