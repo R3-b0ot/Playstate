@@ -29,6 +29,9 @@ export default function QuizEditor({ title, onBack, onNotice, initialQuiz, onQui
     try { localStorage.setItem(recoveryKey, JSON.stringify({ title, questions, recoveredAt: new Date().toISOString() })); } catch { onNotice("Browser recovery storage is unavailable. Download your quiz file to keep a copy."); }
   }, [recoveryKey, title, questions, onNotice]);
   useEffect(() => {
+    if (initialQuiz) onQuizChange({ id: initialQuiz.id, title, questions });
+  }, [initialQuiz?.id, title, questions, onQuizChange]);
+  useEffect(() => {
     const warnBeforeExit = (event: BeforeUnloadEvent) => { if (!isDirty) return; event.preventDefault(); event.returnValue = ""; };
     window.addEventListener("beforeunload", warnBeforeExit);
     return () => window.removeEventListener("beforeunload", warnBeforeExit);
