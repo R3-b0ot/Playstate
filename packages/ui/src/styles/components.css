@@ -1,0 +1,21 @@
+.ps-button{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;min-height:2.65rem;padding:.68rem 1rem;border:1px solid transparent;border-radius:var(--ps-radius-md);font:600 .9rem var(--ps-font-body);cursor:pointer;transition:background .16s ease,border-color .16s ease,transform .16s ease}
+.ps-button:active{transform:translateY(1px)}
+.ps-button:disabled{opacity:.45;cursor:not-allowed}
+.ps-button--primary{background:var(--ps-color-cyan);color:#06111a}
+.ps-button--primary:hover:not(:disabled){background:#8cecff}
+.ps-button--secondary{background:var(--ps-color-panel-raised);border-color:var(--ps-color-border);color:var(--ps-color-white)}
+.ps-button--secondary:hover:not(:disabled){border-color:var(--ps-color-cyan)}
+.ps-button--quiet{background:transparent;color:var(--ps-color-muted)}
+.ps-button--quiet:hover:not(:disabled){background:var(--ps-color-panel-raised);color:var(--ps-color-white)}
+.ps-button--danger{background:rgb(255 100 124 / 12%);border-color:rgb(255 100 124 / 35%);color:var(--ps-color-danger)}
+.ps-card{background:linear-gradient(145deg,rgb(24 34 53 / 94%),rgb(17 24 39 / 96%));border:1px solid var(--ps-color-border);border-radius:var(--ps-radius-lg)}
+.ps-field{width:100%;min-height:2.7rem;padding:.7rem .85rem;border:1px solid var(--ps-color-border);border-radius:var(--ps-radius-md);background:var(--ps-color-void);color:var(--ps-color-white);font:inherit}
+.ps-field::placeholder{color:#66748a}
+.ps-field:focus{outline:2px solid var(--ps-color-cyan);outline-offset:1px}
+.ps-eyebrow{color:var(--ps-color-cyan);font-size:.7rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.ps-status{display:inline-flex;align-items:center;gap:.4rem;padding:.32rem .55rem;border:1px solid var(--ps-color-border);border-radius:999px;color:var(--ps-color-muted);font-size:.72rem;font-weight:650}
+.ps-status::before{content:"";width:.4rem;height:.4rem;border-radius:50%;background:currentColor}
+.ps-status--good{color:var(--ps-color-lime);border-color:rgb(185 252 81 / 25%)}
+.ps-status--live{color:var(--ps-color-cyan);border-color:rgb(92 227 252 / 28%)}
+.ps-icon-button{display:grid;place-items:center;width:2.55rem;height:2.55rem;border:1px solid var(--ps-color-border);border-radius:var(--ps-radius-md);background:var(--ps-color-panel);color:var(--ps-color-muted);cursor:pointer}
+.ps-icon-button:hover{color:var(--ps-color-white);border-color:var(--ps-color-cyan)}
