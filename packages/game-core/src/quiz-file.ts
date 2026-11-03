@@ -1,4 +1,4 @@
-import { validateQuiz, type QuizDefinition } from "./index";
+import type { QuizDefinition } from "./index";
 
 export const PLAYSTATE_QUIZ_FORMAT = "playstate.quiz" as const;
 export const PLAYSTATE_QUIZ_FILE_VERSION = 1 as const;
@@ -20,8 +20,7 @@ export class QuizFileError extends Error {
 }
 
 export function createQuizFile(quiz: QuizDefinition, exportedAt = new Date()): PlaystateQuizFile {
-  const errors = validateQuiz(quiz);
-  if (errors.length) throw new QuizFileError(errors.join(" "));
+  assertQuizShape(quiz);
   return {
     format: PLAYSTATE_QUIZ_FORMAT,
     formatVersion: PLAYSTATE_QUIZ_FILE_VERSION,
@@ -64,11 +63,31 @@ export function parseQuizFile(source: string): QuizDefinition {
   if (typeof quiz.id !== "string" || typeof quiz.title !== "string" || !Array.isArray(quiz.questions)) {
     throw new QuizFileError("The quiz file is missing required quiz fields.");
   }
-  const errors = validateQuiz(quiz);
-  if (errors.length) throw new QuizFileError(`The quiz file failed validation: ${errors.join(" ")}`);
+  assertQuizShape(quiz);
 
   // Import is deliberately a copy operation: give the imported quiz its own identity.
   return { ...structuredClone(quiz), id: createIndependentQuizId() };
+}
+
+function assertQuizShape(value: unknown): asserts value is QuizDefinition {
+  if (!value || typeof value !== "object") throw new QuizFileError("The quiz data is malformed.");
+  const quiz = value as Partial<QuizDefinition>;
+  if (typeof quiz.id !== "string" || typeof quiz.title !== "string" || !Array.isArray(quiz.questions)) {
+    throw new QuizFileError("The quiz file is missing required quiz fields.");
+  }
+  for (const [index, question] of quiz.questions.entries()) {
+    if (!question || typeof question !== "object" || typeof question.id !== "string" || typeof question.prompt !== "string" || typeof question.correctOptionId !== "string" || !Array.isArray(question.options)) {
+      throw new QuizFileError(`Question ${index + 1} is malformed.`);
+    }
+    for (const option of question.options) {
+      if (!option || typeof option !== "object" || typeof option.id !== "string" || typeof option.label !== "string" || typeof option.text !== "string") {
+        throw new QuizFileError(`An answer option in question ${index + 1} is malformed.`);
+      }
+    }
+    if (question.explanation !== undefined && typeof question.explanation !== "string") {
+      throw new QuizFileError(`The explanation for question ${index + 1} is malformed.`);
+    }
+  }
 }
 
 function createIndependentQuizId(): string {
